@@ -93,7 +93,9 @@ Convert a `ThreadLocal` only when it is set once at the start of a unit of work,
 
 ## Fan-out without preview APIs
 
-Structured concurrency (`StructuredTaskScope`) is preview in every JDK through 27, and its API changed in 25 and again in 27. For "run subtasks, fail fast, cancel the rest" use final APIs:
+Structured concurrency (`StructuredTaskScope`) is preview in every JDK through 27, and its API changed in 25 and again in 27. For "run subtasks, fail on error, cancel the rest" use final APIs.
+
+Simple form: waits in submission order, so a failure of the second task surfaces only after the first finishes. Fine for a few short calls:
 
 <!-- compile: jdk=21 -->
 ```java
@@ -120,6 +122,41 @@ static UserAndOrder load(Callable<String> user, Callable<String> order)
     }
 }
 ```
+
+Fail-fast form: reacts to whichever task fails first and cancels the others. Use it when subtasks are slow or many:
+
+<!-- compile: jdk=21 -->
+```java
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+static <T> List<T> allOrFirstFailure(List<Callable<T>> tasks) throws InterruptedException, ExecutionException {
+    try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+        CompletionService<T> done = new ExecutorCompletionService<>(executor);
+        List<Future<T>> futures = new ArrayList<>();
+        for (Callable<T> task : tasks) futures.add(done.submit(task));
+        try {
+            for (int i = 0; i < futures.size(); i++) {
+                done.take().get();   // throws ExecutionException for the first task that fails
+            }
+            List<T> results = new ArrayList<>();
+            for (Future<T> f : futures) results.add(f.resultNow());   // submission order
+            return results;
+        } finally {
+            for (Future<T> f : futures) f.cancel(true);   // no-op for finished tasks
+        }
+    }
+}
+```
+
+Both forms throw `ExecutionException` with the subtask's exception as the cause, like `throwIfFailed()` did. When replacing `ShutdownOnFailure`, add a test for the failure path before rewriting.
 
 If the user opts into preview on an exact JDK, see `preview-features.md`.
 
