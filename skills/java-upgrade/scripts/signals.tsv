@@ -1,0 +1,61 @@
+# Signal catalog for scan.sh. Tab-separated: id, category, since, scope, ERE pattern, note.
+# category: removed (breaks compile/run from <since>), deprecated (warns from <since>), behavior (semantics change at <since>),
+#           flag (JVM/build flag obsolete or erroring from <since>), build (build-blocker library: check min version for target),
+#           modernize (newer idiom final since <since>). scope: java (*.java), build (pom.xml, *.gradle*, .mvn/*), config (scripts, Dockerfiles, CI, *.properties, *.conf, *.yml).
+# Range rule (scan.sh --from F --to T): removed/deprecated/behavior when F < since <= T; flag/build/modernize when since <= T.
+# Patterns are POSIX ERE without \b or \s so rg and grep -E agree.
+jaxb	removed	11	java	import[[:space:]]+javax\.xml\.bind	JEP 320: JAXB removed from JDK. Add jakarta.xml.bind-api + org.glassfish.jaxb:jaxb-runtime (or javax.xml.bind:jaxb-api 2.3.x to keep javax namespace)
+jaxws	removed	11	java	import[[:space:]]+javax\.(xml\.ws|jws|xml\.soap)	JEP 320: JAX-WS/SAAJ removed. Add jakarta.xml.ws-api + com.sun.xml.ws:jaxws-rt
+javax-activation	removed	11	java	import[[:space:]]+javax\.activation	JEP 320: JAF removed. Add jakarta.activation-api
+javax-annotation-ee	removed	11	java	import[[:space:]]+javax\.annotation\.(PostConstruct|PreDestroy|Resource|Resources|Generated|Priority|ManagedBean)	JEP 320: common annotations removed. Add jakarta.annotation-api (javax.annotation.processing stays in JDK)
+javax-transaction-ee	removed	11	java	import[[:space:]]+javax\.transaction\.[A-Z]	JEP 320: JTA classes removed (javax.transaction.xa stays). Add jakarta.transaction-api
+corba	removed	11	java	import[[:space:]]+(org\.omg\.|javax\.rmi\.CORBA|javax\.activity)	JEP 320: CORBA removed, no JDK replacement. Use glassfish-corba or drop CORBA
+javafx	removed	11	java	import[[:space:]]+javafx\.	JavaFX unbundled from Oracle JDK 11. Add org.openjfx dependencies + javafx-maven-plugin/javafx-gradle-plugin
+sun-misc-base64	removed	9	java	sun\.misc\.BASE64(En|De)coder	Removed in 9. Use java.util.Base64
+sun-internal	removed	9	java	import[[:space:]]+(sun\.(reflect|security|nio|net|awt|font)|com\.sun\.(org\.apache|crypto\.provider|net\.ssl\.internal|image\.codec))	JDK internal API: not visible with --release 9+, reflective access denied from 17 (JEP 403). Run jdeps --jdk-internals for replacements
+tools-jar	removed	9	build	tools\.jar|rt\.jar	JEP 220: rt.jar/tools.jar gone. Use jdk.compiler module APIs (javax.tools) or jrt:/ filesystem
+javadoc-old-doclet	removed	13	java	import[[:space:]]+com\.sun\.javadoc	Old doclet API removed in 13. Port to jdk.javadoc.doclet
+java-version-parse	behavior	9	java	getProperty\("java\.(specification\.)?version"\)	JEP 223: version is "9", "17.0.2", no "1.x" prefix. Use Runtime.version().feature()
+nashorn	removed	15	java	"nashorn"|jdk\.nashorn	JEP 372: Nashorn removed. Add org.openjdk.nashorn:nashorn-core 15.x (needs 11+) or move to GraalJS
+pack200	removed	14	java	java\.util\.jar\.Pack200	JEP 367: Pack200 removed. Use plain jar/zip compression
+rmi-activation	removed	17	java	java\.rmi\.activation	JEP 407: RMI Activation removed. Plain RMI still works
+deep-reflection	behavior	17	java	setAccessible\(true\)	JEP 403 (17): reflection into JDK internals throws InaccessibleObjectException; needs --add-opens. JEP 500 (26): mutating final fields via reflection warns
+new-wrapper	deprecated	16	java	new[[:space:]]+(Integer|Long|Short|Byte|Double|Float|Character|Boolean)[[:space:]]*\(	JEP 390: wrapper constructors deprecated for removal. Use valueOf / autoboxing
+finalize	deprecated	18	java	void[[:space:]]+finalize[[:space:]]*\([[:space:]]*\)	JEP 421: finalization deprecated for removal. Use try-with-resources (AutoCloseable) or java.lang.ref.Cleaner; test with --finalization=disabled
+default-charset	behavior	18	java	new[[:space:]]+(FileReader|FileWriter|InputStreamReader|OutputStreamWriter|PrintStream|PrintWriter|Scanner)\([^,)]*\)|Charset\.defaultCharset\(\)|file\.encoding	JEP 400: default charset is UTF-8 everywhere. Behavior changes on non-UTF-8 hosts (Windows). Pass an explicit charset; keep existing StandardCharsets.UTF_8
+sequenced-conflict	behavior	21	java	(extends|implements)[[:space:]]+(java\.util\.)?(AbstractList|ArrayList|LinkedList|List|Deque|ArrayDeque|LinkedHashSet|LinkedHashMap|SortedSet|TreeSet|SortedMap|TreeMap|NavigableSet|NavigableMap)([<[:space:]{,]|$)	JEP 431: new getFirst/getLast/reversed/addFirst/addLast/removeFirst/removeLast on List/Deque/Sorted*. Custom subclasses with same-named methods but different return types fail to compile
+mockito-agent	behavior	21	build	mockito-(core|inline)|byte-buddy-agent	JEP 451: dynamic agent loading warns (future: denied). Attach Mockito as -javaagent in surefire/test task (see java-build references)
+security-manager	removed	24	java	System\.(set|get)SecurityManager|extends[[:space:]]+SecurityManager|AccessController\.|java\.security\.manager	JEP 486: Security Manager permanently disabled; setSecurityManager throws, -Djava.security.manager fails startup. Delete the code paths
+jni	behavior	24	java	System\.load(Library)?\(|[[:space:]]native[[:space:]]+[A-Za-z_<]	JEP 472: JNI use warns. Add --enable-native-access=ALL-UNNAMED (or Enable-Native-Access manifest attribute); consider FFM API (final 22)
+unsafe-memory	deprecated	23	java	sun\.misc\.Unsafe	JEP 471 (23) deprecated memory-access methods, JEP 498 (24) warns at runtime. Use VarHandle (on-heap) or FFM MemorySegment (off-heap)
+string-templates	removed	23	java	(STR|FMT|RAW)\."	String Templates (JEP 430/459, preview 21-22) withdrawn and removed in 23. Rewrite with + , String.format / formatted, or StringBuilder
+structured-concurrency-old	removed	25	java	ShutdownOnFailure|ShutdownOnSuccess|new[[:space:]]+StructuredTaskScope	JEP 505 (25) replaced the API with StructuredTaskScope.open(Joiner); still preview through 27 (JEP 533 changed it again). Avoid unless user opts into preview
+applet	removed	26	java	java\.applet|JApplet|AppletInitializer	JEP 504: Applet API removed in 26. Convert to standalone Swing app or drop
+cms-gc	flag	14	config	UseConcMarkSweepGC|CMSInitiatingOccupancyFraction|UseCMSInitiatingOccupancyOnly	JEP 363: CMS removed in 14. Use G1 (default) or ZGC
+gc-log-flags	flag	9	config	PrintGCDetails|PrintGCDateStamps|PrintGCTimeStamps|PrintGCApplicationStoppedTime|PrintTenuringDistribution|UseGCLogFileRotation|NumberOfGCLogFiles|GCLogFileSize|Xloggc	JEP 158/271: unified logging. Replace with -Xlog:gc*:file=gc.log:time,uptime:filecount=5,filesize=10m; several old flags make JVM refuse to start
+permgen-flags	flag	9	config	MaxPermSize|PermSize	PermGen gone since 8; use MaxMetaspaceSize only if needed
+aggressive-opts	flag	12	config	AggressiveOpts|UseParNewGC	Obsolete/expired flags: JVM refuses to start on newer JDKs. Remove
+biased-locking	flag	18	config	UseBiasedLocking|BiasedLockingStartupDelay	JEP 374: biased locking removed; flag obsolete since 18. Remove
+illegal-access	flag	17	config	illegal-access	JEP 403: --illegal-access ignored since 17. Replace with targeted --add-opens module/package=ALL-UNNAMED
+zgenerational	flag	24	config	ZGenerational	JEP 490: non-generational ZGC removed in 24; ZGenerational obsolete. Keep only -XX:+UseZGC
+preview-flag	flag	12	config	enable-preview	Preview features are tied to one exact JDK release. On every JDK bump re-check each preview API (jdk-matrix.md); drop the flag when nothing preview remains
+lombok	build	9	build	lombok	Lombok must know the target JDK: >=1.18.30 for 21, >=1.18.40 for 25, >=1.18.46 for 26, >=1.18.48 for 27. Annotation processing needs explicit processor path on 23+
+mapstruct	build	9	build	mapstruct	Annotation processor: on 23+ javac no longer runs processors implicitly; configure annotationProcessorPaths / annotationProcessor or -proc:full
+jacoco	build	9	build	jacoco	JaCoCo must read target class files: >=0.8.11 for 21, >=0.8.14 for 25, >=0.8.15 for 26, >=0.8.16 for 27
+byte-buddy	build	9	build	byte-buddy	Byte Buddy needs a release that knows the class-file version (1.18.x for 25-27); -Dnet.bytebuddy.experimental=true as stopgap
+errorprone	build	9	build	errorprone|error_prone	Error Prone >=2.43 needs JDK 21 to run; >=2.46 also needs -XDaddTypeAnnotationsToSymbol=true on 21
+kotlin	build	9	build	kotlin-maven-plugin|org\.jetbrains\.kotlin|kotlin\(	Kotlin compiler caps the JVM target: Kotlin 2.3+ needed for Java 25 target
+aspectj	build	9	build	aspectj	AspectJ weaver must support target class files (1.9.21+ for 21, latest 1.9.2x for 25+)
+data-class	modernize	16	java	public[[:space:]]+boolean[[:space:]]+equals[[:space:]]*\([[:space:]]*(final[[:space:]]+)?Object	Records (JEP 395) candidate if the class is a shallowly immutable value. Not for JPA entities, mutable beans, or classes with inheritance
+instanceof-cast	modernize	16	java	instanceof[[:space:]]+[A-Za-z0-9_.]+(<[^>]*>)?[[:space:]]*(\)|&&|\|\|)	Pattern matching for instanceof (JEP 394): bind the variable instead of casting
+old-switch	modernize	14	java	^[[:space:]]*case[[:space:]]+[^-]*:	Switch expressions / arrow labels (JEP 361); type patterns in switch from 21 (JEP 441)
+multiline-concat	modernize	15	java	\\n"[[:space:]]*\+	Text block (JEP 378) candidate for SQL/JSON/HTML built from concatenated lines
+collect-tolist	modernize	16	java	collect\(Collectors\.toList\(\)\)	Stream.toList() (16) returns an unmodifiable list; keep Collectors.toList() if callers mutate the result
+unmodifiable-wrap	modernize	10	java	Collections\.unmodifiable(List|Set|Map)\(	List/Set/Map.of / copyOf (9/10) for constant data. They reject nulls and are not views
+last-element	modernize	21	java	\.get\([A-Za-z0-9_.]+\.size\(\)[[:space:]]*-[[:space:]]*1\)	SequencedCollection.getLast() (JEP 431)
+fixed-pool	modernize	21	java	Executors\.new(Fixed|Cached)ThreadPool	Virtual threads (JEP 444) for blocking I/O tasks: Executors.newVirtualThreadPerTaskExecutor(). Not for CPU-bound work; do not pool virtual threads
+thread-local	modernize	25	java	ThreadLocal[<.]|new[[:space:]]+ThreadLocal	ScopedValue (JEP 506, final 25) when the value is bound once per call scope and never mutated
+blank-check	modernize	11	java	\.trim\(\)\.(isEmpty\(\)|length\(\)[[:space:]]*==[[:space:]]*0)	String.isBlank() (11); note strip() is Unicode-aware, trim() is not
+read-all-bytes	modernize	11	java	new[[:space:]]+String\(Files\.readAllBytes	Files.readString / writeString (11)
+http-url-connection	modernize	11	java	HttpURLConnection	java.net.http.HttpClient (11) for new code; migrate when touching the call
+legacy-date	modernize	8	java	import[[:space:]]+java\.(util\.(Date|Calendar|GregorianCalendar)|text\.SimpleDateFormat)	java.time (JSR 310). Convert at API boundaries; SimpleDateFormat is not thread-safe
