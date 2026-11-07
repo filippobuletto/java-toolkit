@@ -110,7 +110,9 @@ Preview features compile only with `--enable-preview` on exactly one JDK release
 | 24 | Security Manager permanently disabled | 486 | security-manager | migrate 21-to-25.md |
 | 24 | JNI use warns; `--enable-native-access` | 472 | jni | migrate 21-to-25.md |
 | 24 | Non-generational ZGC removed; `ZGenerational` obsolete | 490 | zgenerational | migrate 21-to-25.md |
+| 24 | JAXP processing limits lowered (entity expansions 64000 → 2500, attributes per element 10000 → 200, …); large DTDs fail with `JAXP0001xxxx` | — | — | migrate 21-to-25.md |
 | 25 | 32-bit x86 port removed | 503 | — | migrate 21-to-25.md |
+| 25 | XSLT extension functions off by default (`jdk.xml.enableExtensionFunctions=false`) | — | — | migrate 21-to-25.md |
 | 25 | Structured concurrency preview redesigned (`ShutdownOnFailure` gone) | 505 | structured-concurrency-old | migrate 21-to-25.md |
 | 26 | Reflective mutation of `final` fields warns (`deny` planned) | 500 | deep-reflection | migrate 25-to-27.md |
 | 26 | Applet API removed | 504 | applet | migrate 25-to-27.md |
