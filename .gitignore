@@ -1,0 +1,5 @@
+evals/results/
+.java-upgrade/
+target/
+build/
+.gradle/
