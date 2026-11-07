@@ -1,13 +1,15 @@
 ---
 name: java-modernize
 description: Adopts newer Java language features and APIs in existing code, gated by the project's JDK release. Converts value classes to records, instanceof chains and old switches to pattern matching and switch expressions, concatenated multi-line strings to text blocks, thread pools for blocking I/O to virtual threads, ThreadLocal to ScopedValue, and legacy collection, string, stream and date idioms to current APIs, with explicit rules for when not to convert.
-when_to_use: User asks to modernize Java code, use records/sealed types/pattern matching/text blocks/virtual threads/scoped values, clean up code after a JDK upgrade, or asks which newer Java features fit their code. Also called by the java-upgrade router after the last hop is green when the user opted into modernization.
+when_to_use: User asks to modernize Java code, use records/sealed types/pattern matching/text blocks/virtual threads/scoped values, clean up code after a JDK upgrade, asks which newer Java features fit their code, or asks whether a language feature or API can be used on a given Java release or library target (for example "can we use records while targeting 11", "is ScopedValue still preview"). Also called by the java-upgrade router after the last hop is green when the user opted into modernization.
 argument-hint: "[feature|all] [path]"
 ---
 
 # Modernize Java code
 
 Optional work. Never part of a hop's must-fix steps, never applied without the user opting in.
+
+**Questions without a code change** ("can we use X on release N"): answer from the Gate rules and `jdk-matrix.md` (final-in JDK per feature) only. Name what is available at that release instead. Do not run scripts or edit files.
 
 ## Gate
 
