@@ -1,10 +1,10 @@
 {
   "name": "java-toolkit",
   "version": "0.1.2",
-  "description": "Java skills for Claude Code. Upgrade and modernize Java projects from JDK 8 to 27: a router reads the build and code, then routes to build-tool, breaking-change and feature-adoption skills one LTS hop at a time",
+  "description": "Java skills for Claude Code. Upgrade and modernize Java projects from JDK 8 to 27: a router reads the build and code, then routes to build-tool, breaking-change and feature-adoption skills one LTS hop at a time. A secure-coding skill reviews and writes code against the Oracle Secure Coding Guidelines for Java SE, with corrected and compile-checked examples",
   "author": { "name": "Filippo Buletto", "url": "https://github.com/filippobuletto" },
   "homepage": "https://github.com/filippobuletto/java-toolkit",
   "repository": "https://github.com/filippobuletto/java-toolkit",
   "license": "MIT",
-  "keywords": ["java", "jdk", "upgrade", "migration", "modernization", "maven", "gradle", "skills"]
+  "keywords": ["java", "jdk", "upgrade", "migration", "modernization", "maven", "gradle", "security", "secure-coding", "skills"]
 }

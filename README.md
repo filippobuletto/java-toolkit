@@ -2,7 +2,7 @@
 
 # java-toolkit
 
-A Claude Code plugin with skills for Java projects. Its first skill set upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads.
+A Claude Code plugin with skills for Java projects. Its first skill set upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads. A secure-coding skill reviews and writes Java code against the Oracle Secure Coding Guidelines for Java SE.
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffilippobuletto%2Fjava-toolkit%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version)](.claude-plugin/plugin.json)
 [![License](https://img.shields.io/github/license/filippobuletto/java-toolkit)](LICENSE)
@@ -43,6 +43,12 @@ All version facts live in one file, [jdk-matrix.md](skills/java-upgrade/referenc
 
 Out of scope: framework major upgrades (Spring Boot, Jakarta EE namespace moves, Hibernate, JUnit majors). The plan lists them as prerequisites when they block the target JDK.
 
+## Secure coding
+
+`java-secure-coding` applies the [Secure Coding Guidelines for Java SE](https://www.oracle.com/java/technologies/javase/seccodeguide.html) (document 11.0) in three modes: explain a guideline, write code that follows it, or review a code base. A review maps trust boundaries, finds candidate sites with `rg`, and reports findings by guideline id (`SERIAL-3`, `INJECT-5`) with fixes that compile on the project's release. Security Manager guidelines are flagged as dead code from JDK 24.
+
+The guide's own snippets contain bugs: missing generic type parameters, `GzipOutputStream`, `prepStmt`, `fields.get("data")`, a `readObject` that drops every field, an `InvocationHandler` whose `hashCode` returns `true`, `System.loadLibrary("/com/foo/MyLib.so")`, plus wrong facts and method names. Each one was compiled or run on JDK 21 and 25 and is listed with its evidence in [errata.md](skills/java-secure-coding/references/errata.md). The skill ships corrected versions, compiled by `compile-snippets.sh`.
+
 ## Requirements
 
 - `bash` (3.2+), `awk`, `sed`, `find`; `rg` is used when present, `grep -E` otherwise
@@ -65,6 +71,7 @@ Out of scope: framework major upgrades (Spring Boot, Jakarta EE namespace moves,
 | `/java-toolkit:java-upgrade apply` | Run the confirmed plan |
 | `/java-toolkit:java-upgrade resume` | Continue from `.java-upgrade/progress.md` |
 | `/java-toolkit:java-modernize records src/main/java` | Convert value classes to records |
+| `/java-toolkit:java-secure-coding review src/main/java` | Security review against the Oracle guidelines |
 
 Plain requests such as "upgrade this project to Java 21" also trigger the router.
 
