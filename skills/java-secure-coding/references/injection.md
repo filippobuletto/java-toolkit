@@ -102,7 +102,20 @@ On Windows the target program re-parses one command line, so list arguments are 
 
 ## INJECT-5: XML parsing (XXE, SSRF, entity expansion)
 
-DTDs let a document pull local files and URLs (XXE, SSRF) and expand entities without bound. XInclude and XSLT `document()`, `import` and `include` do the same. `FEATURE_SECURE_PROCESSING` (FSP) is on by default and limits entity expansion, but the JDK default does **not** restrict external access. Configure every factory explicitly.
+DTDs let a document pull local files and URLs (XXE, SSRF) and expand entities (billion laughs). XInclude, schema `import`/`include`/`schemaLocation`, the `xml-stylesheet` instruction and XSLT `document()`, `import` and `include` fetch external resources too.
+
+The JDK turns `FEATURE_SECURE_PROCESSING` (FSP) on by default for DOM, SAX, validation and transformation, which enables the processing limits. It does **not** restrict external access: only FSP set explicitly through the factory API does that. StAX does not support FSP at all. Default factories on JDK 21, 25 and 27, checked with a file-reading external entity:
+
+| Processor (`newInstance()`, nothing set) | Default result | Notes |
+|------------------------------------------|----------------|-------|
+| `DocumentBuilderFactory`, `SAXParserFactory` | XXE reads the file | Explicit `setFeature(FEATURE_SECURE_PROCESSING, true)` alone blocks it |
+| `XMLInputFactory` (StAX) | XXE reads the file | FSP unsupported; set the StAX properties below |
+| `TransformerFactory` (source document) | XXE reads the file | |
+| `XPathFactory` (`InputSource`) | XXE reads the file | |
+| XSLT extension functions (`xalan/java` calls) | 21: run; 25, 27: blocked | `jdk.xml.enableExtensionFunctions` default `false` from 25, Transform API only |
+| Entity expansion | 21: 64000 allowed; 25, 27: 2500 | Default limits lowered in 24 |
+
+Configure every factory explicitly. Factory settings have the highest precedence, so the code below does not depend on system properties or configuration files. It compiles on 8 and blocked every attack above on 21, 25 and 27.
 
 DOM and SAX, when the input has no reason to carry a DTD:
 
@@ -172,17 +185,22 @@ static XPathFactory secureXPathFactory() throws Exception {
 }
 ```
 
-FSP on `TransformerFactory` and `XPathFactory` also turns off extension functions, which otherwise let a stylesheet call Java code (INJECT-8).
+Explicit FSP on `TransformerFactory`, `SchemaFactory` and `XPathFactory` also applies to the parsers they create internally for non-DOM sources, and turns off extension functions, which otherwise let a stylesheet call Java code (INJECT-8). External-access properties (`ACCESS_EXTERNAL_*`) are skipped when a registered resolver (`EntityResolver`, `XMLResolver`, `URIResolver`, `LSResourceResolver`) returns a non-null source, so a resolver must itself only map to local, trusted resources. Prefer a catalog (`javax.xml.catalog`) over hand-written resolvers.
 
-JVM-wide settings, all without code changes:
+JVM-wide settings cover code you do not control (libraries, frameworks). Order of precedence: factory API, system properties, the file named by `java.xml.config.file`, `<java-home>/conf/jaxp.properties`, built-in defaults.
 
-| Setting | From | Effect |
-|---------|------|--------|
-| `-Djdk.xml.dtd.support=deny` (or `ignore`) | 22 | Rejects (or skips) DTDs in every JDK parser. Has no effect on a factory where `disallow-doctype-decl` or `SUPPORT_DTD` is set explicitly |
-| `-Djava.xml.config.file=<copy of conf/jaxp-strict.properties.template>` | 23 (template) | Strict limits and external-access settings for all processors |
-| `-Djdk.xml.entityExpansionLimit=2000` and the other `jdk.xml.*` limits | 8 | Tighter processing limits |
+| Setting | From | Effect, verified on 25 and 27 |
+|---------|------|-------------------------------|
+| `-Djdk.xml.dtd.support=deny` (or `ignore`) | 22 | Every JDK parser and processor rejects (skips) DTDs: blocks XXE and entity bombs in default DOM, SAX, StAX, XSLT and XPath. Ignored where a factory sets `disallow-doctype-decl` or `SUPPORT_DTD` itself. Only safe when no input legitimately uses DTDs |
+| `-Djdk.xml.jdkcatalog.resolve=strict` | 22 | The built-in catalog becomes the default resolver and throws `CatalogException` for any external reference it cannot map: blocks XXE in default DOM, SAX, StAX, XSLT and XPath while DTD-free documents, internal entities and DTDs held in the built-in catalog (`java.util.Properties` XML, XHTML, XML Schema) keep working. Default is `continue` |
+| `-Djava.xml.config.file=<file>` | 21 | Loads a user configuration file over `jaxp.properties`. Read once, when the first factory is created |
+| `conf/jaxp-strict.properties.template` | 23 | Copy it and point `java.xml.config.file` at the copy. On 25 and 27 it differs from the default `jaxp.properties` only in `jdk.xml.jdkcatalog.resolve=strict` (`jdk.xml.dtd.support` stays `allow`) |
+| `-Djdk.xml.entityExpansionLimit`, `totalEntitySizeLimit`, `maxElementDepth`, … | 8 | Processing limits. Defaults lowered in 24 (for example expansions 64000 → 2500, attributes per element 10000 → 200); lower them further to what your documents need |
+| `javax.xml.accessExternalDTD`, `accessExternalSchema`, `accessExternalStylesheet` | 8 | Protocol allow-lists for external access, `""` for none. Default `all` |
 
-These `jdk.xml.*` properties and the `XMLConstants.ACCESS_EXTERNAL_*` attributes apply to the JDK's built-in parser. A third-party parser on the class path (Apache Xerces, Saxon, Woodstox) may be picked up by `newInstance()` and ignore them. Configure that library with its own features, or use `newDefaultInstance()` (9) to force the JDK implementation.
+On JDK 21 the `dtd.support` and `jdkcatalog.resolve` properties do not exist and have no effect; a configuration file copied from a newer template applies only its limits there.
+
+Third-party implementations: `newInstance()` uses any provider registered through `META-INF/services` on the class path (Apache Xerces, Woodstox, Aalto, Saxon). The `jdk.xml.*` properties do not reach them. With Woodstox 7.1 on the class path, `XMLInputFactory.newInstance()` returns `WstxInputFactory`, `-Djdk.xml.dtd.support=deny` has no effect and XXE reads the file, while the standard properties in `secureStax()` still block it. Either configure the implementation through the standard API as above, or force the JDK one with `newDefaultInstance()` / `newDefaultFactory()` (9). The JDK's transformer, validator and XPath implementations use the JDK parser internally unless `jdk.xml.overrideDefaultParser=true`.
 
 Indirect XML parsers count too (INJECT-5 note): SOAP stacks, `java.beans.XMLDecoder`, `java.util.prefs`, office-document and SVG libraries, configuration loaders.
 
@@ -196,7 +214,7 @@ Indirect XML parsers count too (INJECT-5 note): SOAP stacks, `java.beans.XMLDeco
 These APIs run code or load classes from data. Treat any untrusted input reaching them as code execution:
 
 - `javax.script` engines (Nashorn left the JDK in 15; GraalJS, Rhino and Groovy engines come from libraries).
-- XSLT and XPath extension functions (off with FSP, see above).
+- XSLT and XPath extension functions: off with explicit FSP; for XSLT also off by default from 25 (see above).
 - `java.beans.XMLDecoder` (JavaBeans long-term persistence): the XML can instantiate any class and call any method. Never decode untrusted XML with it.
 - `javax.sound.midi.MidiSystem.getSoundbank`.
 - RMI remote class loading: `java.rmi.server.useCodebaseOnly` must stay `true` (default since 7u21).

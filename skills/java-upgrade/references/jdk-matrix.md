@@ -51,8 +51,9 @@ Hop strategy: step through LTS releases (8 → 11 → 17 → 21 → 25), then 25
 | Foreign Function and Memory API | 454 | 22 | (migrate 21-to-25.md) |
 | Launch multi-file source programs | 458 | 22 | language-misc.md |
 | `jdk.xml.dtd.support` system property (allow/ignore/deny DTDs in all JDK XML parsers) | — | 22 | (secure-coding injection.md) |
+| Built-in XML catalog; `jdk.xml.jdkcatalog.resolve=strict` rejects unresolved external references | — | 22 | (secure-coding injection.md) |
 | Markdown documentation comments `///` | 467 | 23 | language-misc.md |
-| `conf/jaxp-strict.properties.template` (strict JAXP configuration) | — | 23 | (secure-coding injection.md) |
+| `conf/jaxp-strict.properties.template` (on 25–27 differs from the default only in `jdkcatalog.resolve=strict`) | — | 23 | (secure-coding injection.md) |
 | Stream gatherers | 485 | 24 | collections-streams.md |
 | Class-File API (`java.lang.classfile`) | 484 | 24 | language-misc.md |
 | ML-KEM / ML-DSA post-quantum algorithms | 496 / 497 | 24 | — |

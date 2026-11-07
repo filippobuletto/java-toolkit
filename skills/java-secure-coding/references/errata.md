@@ -2,7 +2,7 @@
 
 Defects in the code and facts of the source guide (document version 11.0, June 2025, <https://www.oracle.com/java/technologies/javase/seccodeguide.html>). Never copy a snippet from the guide without checking this table. The corrected code lives in the topic references, compiled by `tests/compile-snippets.sh`.
 
-Contents: compile errors · runtime and semantic errors · wrong facts and names · how this was checked.
+Contents: compile errors · runtime and semantic errors · wrong facts and names · JAXP security guide · how this was checked.
 
 ## Compile errors
 
@@ -56,9 +56,28 @@ These compile once the missing `throws` are added, then misbehave. Output from J
 
 Checked and correct, despite looking suspicious: `label.putClientProperty("html.disable", true)` (autoboxing yields `Boolean.TRUE`), `InetAddress` is `sealed … permits Inet4Address, Inet6Address` with both subclasses `final`, `HttpCookie` is `final`, `Integer.MIN_VALUE == -Integer.MIN_VALUE` and `== Math.abs(Integer.MIN_VALUE)`, `Objects.checkFromIndexSize(1, Integer.MAX_VALUE, 10)` throws, the `NativeMethodWrapper` overflow checks, the serialization filter backports (8u121, 7u131, 6u141).
 
+## JAXP security guide
+
+The Secure Coding guide points to the JAXP Security Guide for XML settings (its reference [29]). The JDK 25, 26 and 27 editions have the same content and these defects. Defaults below were read from `conf/jaxp.properties` and observed on JDK 27.
+
+| Section | Guide says | Right |
+|---------|-----------|-------|
+| Limiting Entity Expansion | "By default, entityExpansionLimit is set to 64,000" | 2500 since 24, as the guide's own Table 12-2 says. 64000 was the default up to 23 |
+| Limiting the Number of Element Attributes | "By default, jdk.xml.elementAttributeLimit is set to 10,000" | 200 since 24 (Table 12-2 again) |
+| Table 12-2 | `jdk.xml.xpathTotalOpLimit` default 100000 | 10000 (`jaxp.properties`, module summary) |
+| Table 12-3 | `TransformerFactory`: FSP enabled "false" | `getFeature(FEATURE_SECURE_PROCESSING)` returns `true` by default for DOM, SAX, schema and transformer factories; only `XPathFactory` returns `false`. The guide's own FSP section agrees |
+| Table 12-4 | Captioned "The jdk.xml.enableExtensionFunctions Property" | Describes `jdk.xml.overrideDefaultParser` |
+| Element attribute sample | "sets the parser property …/entity-expansion-limit to 20" | The code sets `…/elementAttributeLimit` |
+| Entity expansion and attribute samples | `dfactory.setAttribute(…)` then `dbFactory.newDocumentBuilder()`; `new Integer("10000")` | One variable name; `Integer.valueOf` (the constructors are deprecated since 9) |
+| Entity Resolvers for SAX and DOM | `DocumentBuilder builder = …; docBuilder.setEntityResolver(resolver);` | One variable name |
+| Catalog Resolver | `URI catalogUri = URI.create("…")` | Missing `;` |
+| XInclude example | `href=toc.xml"` | `href="toc.xml"` |
+| Command-line example | `java -DentityExpansionLimit=10000` | Works only as the legacy name; use `-Djdk.xml.entityExpansionLimit=10000` |
+
 ## How this was checked
 
 - Snippets: every code block of the guide compiled verbatim with javac 21 (the last LTS where the Security Manager APIs still run), with stubs only for undefined names. Diagrams, method lists and `...` pseudo-code were judged by reading.
 - Behavior: a runner on JDK 21 and 25 for the proxy `hashCode`, `loadLibrary`, floating-point casts, serialization round trips, `Arrays.asList`, `InetAddress` and `HttpCookie` modifiers.
 - Method lists: each entry looked up in the JDK 11, 17 and 21 `src.zip`, including its `@CallerSensitive` annotation.
-- Facts: JEP pages 360 and 409, the Java Object Serialization Specification (JDK 25, section 2.3), the JDK 22, 23 and 25 JAXP security guides, JDK-8306632.
+- Facts: JEP pages 360 and 409, the Java Object Serialization Specification (JDK 25, section 2.3), JDK-8306632 and JDK-8343022, the `java.xml` module summaries of JDK 21 to 27.
+- XML: the JAXP security guides of JDK 22 to 27 read and diffed (25 = 26 = 27), `jaxp.properties` and the strict template compared on 21, 25 and 27, and an attack run (external file entity, entity bomb, XSLT extension call) against default and hardened factories on 21, 25 and 27, with and without `jdk.xml.dtd.support`, `jdk.xml.jdkcatalog.resolve` and the strict template, plus Woodstox 7.1 on the class path.
