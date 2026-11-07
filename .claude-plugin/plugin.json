@@ -1,6 +1,6 @@
 {
   "name": "java-toolkit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Java skills for Claude Code. Upgrade and modernize Java projects from JDK 8 to 27: a router reads the build and code, then routes to build-tool, breaking-change and feature-adoption skills one LTS hop at a time",
   "author": { "name": "Filippo Buletto", "url": "https://github.com/filippobuletto" },
   "homepage": "https://github.com/filippobuletto/java-toolkit",
