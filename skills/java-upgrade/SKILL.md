@@ -45,7 +45,7 @@ Then ask for the target if missing. Offer: next LTS above `from`, latest LTS (25
 
 ## Step 2: assess
 
-Invoke the `java-upgrade:java-assess` skill with the project root, `from` and `to`. It writes `.java-upgrade/assessment.md` with signals from `scripts/scan.sh` and, when the project builds, `jdeps` and `jdeprscan` results. Confirm the baseline build result is in it.
+Invoke the `java-toolkit:java-assess` skill with the project root, `from` and `to`. It writes `.java-upgrade/assessment.md` with signals from `scripts/scan.sh` and, when the project builds, `jdeps` and `jdeprscan` results. Confirm the baseline build result is in it.
 
 ## Step 3: route
 
@@ -53,10 +53,10 @@ Map assessment findings to skills:
 
 | Finding | Route to |
 |---------|----------|
-| Build tool, wrapper, compiler/surefire plugin versions, `release`, toolchains, CI/Docker JDK | `java-upgrade:java-build` |
-| `build` signals (Lombok, MapStruct, JaCoCo, Byte Buddy, Mockito agent, Error Prone, Kotlin, AspectJ) | `java-upgrade:java-build` (references/build-blockers.md) |
-| `removed`, `deprecated`, `behavior`, `flag` signals, jdeps internal API use, jdeprscan for-removal hits | `java-upgrade:java-migrate` with the hop (`8-to-11`, `11-to-17`, `17-to-21`, `21-to-25`, `25-to-27`) |
-| `modernize` signals, or the user asks for newer language features | `java-upgrade:java-modernize` (only after the last hop is green, and only if opted in) |
+| Build tool, wrapper, compiler/surefire plugin versions, `release`, toolchains, CI/Docker JDK | `java-toolkit:java-build` |
+| `build` signals (Lombok, MapStruct, JaCoCo, Byte Buddy, Mockito agent, Error Prone, Kotlin, AspectJ) | `java-toolkit:java-build` (references/build-blockers.md) |
+| `removed`, `deprecated`, `behavior`, `flag` signals, jdeps internal API use, jdeprscan for-removal hits | `java-toolkit:java-migrate` with the hop (`8-to-11`, `11-to-17`, `17-to-21`, `21-to-25`, `25-to-27`) |
+| `modernize` signals, or the user asks for newer language features | `java-toolkit:java-modernize` (only after the last hop is green, and only if opted in) |
 | Framework upgrades (Spring Boot, Jakarta EE, Hibernate, JUnit majors) | Out of scope: list as prerequisites in the plan |
 
 ## Step 4: plan

@@ -1,11 +1,11 @@
 <div align="center">
 
-# java-upgrade
+# java-toolkit
 
-A Claude Code plugin that upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads.
+A Claude Code plugin with skills for Java projects. Its first skill set upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads.
 
-[![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffilippobuletto%2Fjava-upgrade%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version)](.claude-plugin/plugin.json)
-[![License](https://img.shields.io/github/license/filippobuletto/java-upgrade)](LICENSE)
+[![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffilippobuletto%2Fjava-toolkit%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version)](.claude-plugin/plugin.json)
+[![License](https://img.shields.io/github/license/filippobuletto/java-toolkit)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?logo=claude&logoColor=white)](https://code.claude.com/docs/en/plugins)
 [![Java](https://img.shields.io/badge/JDK-8%E2%80%9327-ED8B00?logo=openjdk&logoColor=white)](skills/java-upgrade/references/jdk-matrix.md)
 [![Bash](https://img.shields.io/badge/shell-Bash-4EAA25?logo=gnu-bash&logoColor=white)](skills/java-upgrade/scripts)
@@ -13,7 +13,7 @@ A Claude Code plugin that upgrades Java projects from JDK 8 up to JDK 27. It rea
 </div>
 
 ```text
-/java-upgrade:java-upgrade 21
+/java-toolkit:java-upgrade 21
 ```
 
 ## How it works
@@ -53,18 +53,18 @@ Out of scope: framework major upgrades (Spring Boot, Jakarta EE namespace moves,
 
 ```text
 /plugin marketplace add filippobuletto/claude-plugins
-/plugin install java-upgrade@filippobuletto
+/plugin install java-toolkit@filippobuletto
 ```
 
 ## Usage
 
 | Command | Does |
 | :- | :- |
-| `/java-upgrade:java-upgrade 21` | Assess and plan an upgrade to 21, then wait for your confirmation |
-| `/java-upgrade:java-upgrade 25 assess` | Assessment only |
-| `/java-upgrade:java-upgrade apply` | Run the confirmed plan |
-| `/java-upgrade:java-upgrade resume` | Continue from `.java-upgrade/progress.md` |
-| `/java-upgrade:java-modernize records src/main/java` | Convert value classes to records |
+| `/java-toolkit:java-upgrade 21` | Assess and plan an upgrade to 21, then wait for your confirmation |
+| `/java-toolkit:java-upgrade 25 assess` | Assessment only |
+| `/java-toolkit:java-upgrade apply` | Run the confirmed plan |
+| `/java-toolkit:java-upgrade resume` | Continue from `.java-upgrade/progress.md` |
+| `/java-toolkit:java-modernize records src/main/java` | Convert value classes to records |
 
 Plain requests such as "upgrade this project to Java 21" also trigger the router.
 
