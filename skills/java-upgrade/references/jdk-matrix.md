@@ -39,7 +39,7 @@ Hop strategy: step through LTS releases (8 → 11 → 17 → 21 → 25), then 25
 | `Stream.toList()` (unmodifiable) | — | 16 | collections-streams.md |
 | Sealed classes and interfaces | 409 | 17 | records-sealed.md |
 | `RandomGenerator` API | 356 | 17 | — |
-| Context-specific deserialization filters | 415 | 17 | — |
+| Context-specific deserialization filters | 415 | 17 | (secure-coding serialization.md) |
 | UTF-8 default charset | 400 | 18 | (migrate 17-to-21.md) |
 | `@snippet` in Javadoc | 413 | 18 | language-misc.md |
 | Virtual threads | 444 | 21 | concurrency.md |
@@ -50,7 +50,9 @@ Hop strategy: step through LTS releases (8 → 11 → 17 → 21 → 25), then 25
 | Unnamed variables and patterns `_` | 456 | 22 | patterns-switch.md |
 | Foreign Function and Memory API | 454 | 22 | (migrate 21-to-25.md) |
 | Launch multi-file source programs | 458 | 22 | language-misc.md |
+| `jdk.xml.dtd.support` system property (allow/ignore/deny DTDs in all JDK XML parsers) | — | 22 | (secure-coding injection.md) |
 | Markdown documentation comments `///` | 467 | 23 | language-misc.md |
+| `conf/jaxp-strict.properties.template` (strict JAXP configuration) | — | 23 | (secure-coding injection.md) |
 | Stream gatherers | 485 | 24 | collections-streams.md |
 | Class-File API (`java.lang.classfile`) | 484 | 24 | language-misc.md |
 | ML-KEM / ML-DSA post-quantum algorithms | 496 / 497 | 24 | — |
