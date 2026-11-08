@@ -60,19 +60,19 @@ The recipes cover only part of each migration. Each hop reference splits the wik
 
 ## Secure coding
 
-`java-secure-coding` applies the [Secure Coding Guidelines for Java SE](https://www.oracle.com/java/technologies/javase/seccodeguide.html) (document 11.0) in three modes: explain a guideline, write code that follows it, or review a code base. A review maps trust boundaries, finds candidate sites with `rg`, and reports findings by guideline id (`SERIAL-3`, `INJECT-5`) with fixes that compile on the project's release. Security Manager guidelines are flagged as dead code from JDK 24.
+`java-secure-coding` applies the [Secure Coding Guidelines for Java SE](https://www.oracle.com/java/technologies/javase/seccodeguide.html) (document 11.0) in three modes: explain a guideline, write code that follows it, or review a code base. A review maps trust boundaries, finds candidate sites with `scan.sh --security`, and reports findings by guideline id (`SERIAL-3`, `INJECT-5`) with fixes that compile on the project's release. Security Manager guidelines are flagged as dead code from JDK 24.
 
 The guide's own snippets contain bugs: missing generic type parameters, `GzipOutputStream`, `prepStmt`, `fields.get("data")`, a `readObject` that drops every field, an `InvocationHandler` whose `hashCode` returns `true`, `System.loadLibrary("/com/foo/MyLib.so")`, plus wrong facts and method names. Each one was compiled or run on JDK 21 and 25 and is listed with its evidence in [errata.md](skills/java-secure-coding/references/errata.md). The skill ships corrected versions, compiled by `compile-snippets.sh`.
 
 ## SOLID design
 
-`java-solid` explains, writes and reviews Java code against the five SOLID principles. A review starts from churn hotspots in `git log`, finds candidate sites with `rg`, and reports each finding with its evidence (who changes the class, which edit repeats, which client breaks) and a fix that compiles on the project's release. Each principle has rules for when not to apply it, so the skill does not add interfaces nobody needs.
+`java-solid` explains, writes and reviews Java code against the five SOLID principles. A review starts from churn hotspots in `git log`, finds candidate sites with Claude Code's Grep tool, and reports each finding with its evidence (who changes the class, which edit repeats, which client breaks) and a fix that compiles on the project's release. Each principle has rules for when not to apply it, so the skill does not add interfaces nobody needs.
 
 The references add current Java: `sealed` types with exhaustive `switch` as the closed-set form of open/closed, records and `final` classes against substitution bugs, `InstantSource` as interface segregation in the JDK, and constructor injection without a framework. Every example compiles on the JDK its marker claims, checked by `compile-snippets.sh`.
 
 ## Requirements
 
-- `bash` (3.2+), `awk`, `sed`, `find`; `rg` is used when present, `grep -E` otherwise
+- `bash` (3.2+), `awk`, `sed`, `find`; `rg` is used when present, `grep -E` otherwise (tested with stock macOS bash 3.2 and BSD grep)
 - The JDKs for each hop installed locally (SDKMAN, `/Library/Java/JavaVirtualMachines` and `/usr/lib/jvm` are detected)
 - Maven or Gradle, or the project's wrapper
 
