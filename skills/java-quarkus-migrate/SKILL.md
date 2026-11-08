@@ -44,10 +44,10 @@ Inputs: the hop, the project root, the build JDK home (`jdk.N` from detect) and 
 | Hop | File | JDK | Main topics |
 |-----|------|-----|-------------|
 | 2.13/2.16 → 3.2 | [2.13-to-3.2.md](references/2.13-to-3.2.md) | 11 | Jakarta EE 10 (`javax` → `jakarta`), Hibernate ORM 5.6 → 6.2, recipes start at 3.0 |
-| 3.2 → 3.8 | [3.2-to-3.8.md](references/3.2-to-3.8.md) | 17 | Java 17 minimum (3.7) |
-| 3.8 → 3.15 | [3.8-to-3.15.md](references/3.8-to-3.15.md) | 17 | RESTEasy Reactive → Quarkus REST (3.9), Hibernate ORM 6.6 |
-| 3.15 → 3.20 | [3.15-to-3.20.md](references/3.15-to-3.20.md) | 17 | See reference |
-| 3.20 → 3.27 | [3.20-to-3.27.md](references/3.20-to-3.27.md) | 17 | Hibernate ORM 7.0 / Jakarta Persistence 3.2 (3.24), ORM 7.1 |
-| 3.27 → 3.33 | [3.27-to-3.33.md](references/3.27-to-3.33.md) | 17 | Hibernate ORM 7.2 |
+| 3.2 → 3.8 | [3.2-to-3.8.md](references/3.2-to-3.8.md) | 17 | Java 17 minimum (3.7), RESTEasy Classic client rename (3.7), Hibernate ORM 6.4, Hibernate Search 7 |
+| 3.8 → 3.15 | [3.8-to-3.15.md](references/3.8-to-3.15.md) | 17 | RESTEasy Reactive → Quarkus REST and messaging renames (3.9), Flyway 10 modules, `quarkus.package.jar.*`, Hibernate ORM 6.6 |
+| 3.15 → 3.20 | [3.15-to-3.20.md](references/3.15-to-3.20.md) | 17 | OpenTracing removed (3.17), Flyway 11, Fabric8 Kubernetes Client 7 |
+| 3.20 → 3.27 | [3.20-to-3.27.md](references/3.20-to-3.27.md) | 17 | `schema-management` keys (3.23), Hibernate ORM 7.0 / Jakarta Persistence 3.2 (3.24), `.enable` → `.enabled` (3.26) |
+| 3.27 → 3.33 | [3.27-to-3.33.md](references/3.27-to-3.33.md) | 17 | Derby removed (3.30), `quarkus-junit5` → `quarkus-junit` and JUnit 6 (3.31), Testcontainers 2, Hibernate ORM 7.2 |
 | 3.33 → 3.40 | [3.33-to-3.40.md](references/3.33-to-3.40.md) | 17 | `@Transactional` threading, Host validation, Quarkus Data, ORM 7.4, TLS SPI move |
 | 3.40 → 4.0 (beta) | [3.40-to-4.0.md](references/3.40-to-4.0.md) | 21 | Java 21 minimum, dropped relocations, Jackson package rename, Hibernate ORM 8 |

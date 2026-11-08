@@ -160,6 +160,14 @@ check "quarkus catalog: rows have 6 fields, known category/scope, dotted since" 
 dups=$(awk -F'\t' '!/^#/ && NF { print $1 }' "$QCAT" | sort | uniq -d | paste -sd, -)
 check "quarkus catalog: ids unique" "" "$dups"
 
+QREF="$ROOT/skills/java-quarkus-migrate/references"
+unknown=$(for f in "$QREF"/*-to-*.md; do
+    grep -oE '\(`[a-z0-9-]+`( signal)?\)' "$f" | sed -E 's/^\(`([a-z0-9-]+)`.*/\1/' | while read -r id; do
+      awk -F'\t' -v id="$id" '$1 == id { found = 1 } END { exit !found }' "$QCAT" || echo "$(basename "$f"):$id"
+    done
+  done | sort -u | paste -sd, -)
+check "quarkus references: every cited signal id is in the catalog" "" "$unknown"
+
 QM="$FIX/quarkus-2.16-maven" QG="$FIX/quarkus-3.20-gradle-kts"
 out=$(scan "$QM" --framework quarkus --from 2.16 --to 3.2)
 check "scan quarkus 2.16→3.2: jakarta namespace" "javax-ee" "$(ids "$out")"
@@ -167,13 +175,15 @@ check "scan quarkus 2.16→3.2: location is relative path:line" \
   "src/main/java/org/acme/greeting/Greeting.java:5" "$(awk -F'\t' '$1 == "javax-ee" { print $4; exit }' <<<"$out")"
 out=$(scan "$QM" --framework quarkus --from 2.16 --to 3.40)
 check "scan quarkus 2.16→3.40: renames and behavior" \
-  "javax-ee,rest-reactive-artifact,rest-reactive-config,transactional-uni" "$(ids "$out")"
+  "javax-ee,junit5-artifacts,orm-database-generation,rest-reactive-artifact,rest-reactive-config,transactional-uni" "$(ids "$out")"
 out=$(scan "$QG" --framework quarkus --from 3.20 --to 3.40)
 check "scan quarkus 3.20→3.40: gradle fixture" \
-  "http-host-localhost,kafka-native-provider,tls-provider-package,transactional-uni" "$(ids "$out")"
+  "http-host-localhost,junit5-artifacts,kafka-native-provider,tls-provider-package,transactional-uni" "$(ids "$out")"
 check "scan quarkus 3.20→3.40: removed sorts first" "removed" "$(head -n1 <<<"$out" | cut -f2)"
 out=$(scan "$QG" --framework quarkus --from 3.20 --to 3.33)
-check "scan quarkus 3.20→3.33: nothing in range" "" "$(ids "$out")"
+check "scan quarkus 3.20→3.33: only the 3.31 junit rename" "junit5-artifacts" "$(ids "$out")"
+out=$(scan "$QG" --framework quarkus --from 3.33 --to 3.33)
+check "scan quarkus empty range: nothing" "" "$(ids "$out")"
 sum=$(scan "$QM" --framework quarkus --from 2.16 --to 3.2 --summary)
 check "scan quarkus --summary: javax-ee counts every import" "7" "$(awk -F'\t' '$1 == "javax-ee" { print $4 }' <<<"$sum")"
 
