@@ -1,6 +1,6 @@
 {
   "name": "java-toolkit",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Java skills for Claude Code. Upgrade and modernize Java projects from JDK 8 to 27: a router reads the build and code, then routes to build-tool, breaking-change and feature-adoption skills one LTS hop at a time. A secure-coding skill reviews and writes code against the Oracle Secure Coding Guidelines for Java SE, with corrected and compile-checked examples. A SOLID skill explains, writes and reviews code against the five SOLID design principles",
   "author": { "name": "Filippo Buletto", "url": "https://github.com/filippobuletto" },
   "homepage": "https://github.com/filippobuletto/java-toolkit",
