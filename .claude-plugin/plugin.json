@@ -1,6 +1,6 @@
 {
   "name": "java-toolkit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Java skills for Claude Code. Upgrade and modernize Java projects from JDK 8 to 27: a router reads the build and code, then routes to build-tool, breaking-change and feature-adoption skills one LTS hop at a time. A companion router upgrades Quarkus from 2.13 to the 3.40 LTS one stream at a time with quarkus update and the migration guides, interleaving the JDK hops each release needs. A secure-coding skill reviews and writes code against the Oracle Secure Coding Guidelines for Java SE, with corrected and compile-checked examples. A SOLID skill explains, writes and reviews code against the five SOLID design principles",
   "author": { "name": "Filippo Buletto", "url": "https://github.com/filippobuletto" },
   "homepage": "https://github.com/filippobuletto/java-toolkit",
