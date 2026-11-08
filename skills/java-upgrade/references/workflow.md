@@ -27,7 +27,7 @@ Stop and report to the user, without improvising a workaround, when:
 
 - The baseline build or tests fail on the current JDK before any change.
 - A hop needs a JDK that is not installed. Name the JDK and suggest `sdk install java <version>` (or the platform equivalent); do not install it.
-- A fix needs a dependency change outside build-blocker scope (for example a framework major upgrade such as Spring Boot 2 → 3). Record it in the plan as a prerequisite.
+- A fix needs a dependency change outside build-blocker scope (for example a framework major upgrade such as Spring Boot 2 → 3). Record it in the plan as a prerequisite. Quarkus upgrades go to `java-framework-upgrade`.
 - A test fails after a step and the cause is not understood after one focused investigation.
 - The only fix would weaken or delete a test.
 

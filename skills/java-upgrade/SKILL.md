@@ -35,7 +35,7 @@ If `.java-upgrade/progress.md` exists and no mode is given, ask whether to resum
 
 ## Step 1: detect
 
-Run `bash ${CLAUDE_SKILL_DIR}/scripts/detect.sh <project-root>`. Keys: `build_tool`, `wrapper`, `java_release`, `java_release_from`, plugin and wrapper versions, `uses` (build-blocker libraries), `ci_java`, `docker_java`, `pinned_java`, `jdk.N=<home>` per installed JDK.
+Run `bash ${CLAUDE_SKILL_DIR}/scripts/detect.sh <project-root>`. Keys: `build_tool`, `wrapper`, `java_release`, `java_release_from`, plugin and wrapper versions, `uses` (build-blocker libraries), `ci_java`, `docker_java`, `pinned_java`, `jdk.N=<home>` per installed JDK, and `quarkus_*` keys when the project uses Quarkus.
 
 - `build_tool=none`: not a Maven/Gradle project; ask how it is built before going further.
 - Multi-module (`maven_modules` > 0, or Gradle subprojects): the release may be set per module; read child build files too.
@@ -57,7 +57,8 @@ Map assessment findings to skills:
 | `build` signals (Lombok, MapStruct, JaCoCo, Byte Buddy, Mockito agent, Error Prone, Kotlin, AspectJ) | `java-toolkit:java-build` (references/build-blockers.md) |
 | `removed`, `deprecated`, `behavior`, `flag` signals, jdeps internal API use, jdeprscan for-removal hits | `java-toolkit:java-migrate` with the hop (`8-to-11`, `11-to-17`, `17-to-21`, `21-to-25`, `25-to-27`) |
 | `modernize` signals, or the user asks for newer language features | `java-toolkit:java-modernize` (only after the last hop is green, and only if opted in) |
-| Framework upgrades (Spring Boot, Jakarta EE, Hibernate, JUnit majors) | Out of scope: list as prerequisites in the plan |
+| Quarkus upgrade, or a Quarkus version whose minimum or recommended JDK conflicts with the target (`quarkus_version` from detect, facts in `${CLAUDE_PLUGIN_ROOT}/skills/java-quarkus-migrate/references/quarkus-matrix.md`) | `java-toolkit:java-framework-upgrade`: list it as a prerequisite step and hand over; that router interleaves JDK hops |
+| Other framework upgrades (Spring Boot, Jakarta EE, Hibernate, JUnit majors) | Out of scope: list as prerequisites in the plan |
 
 ## Step 4: plan
 
