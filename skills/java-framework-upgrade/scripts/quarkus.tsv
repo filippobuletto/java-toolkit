@@ -1,0 +1,21 @@
+# Quarkus signal catalog for scan.sh --framework quarkus. Tab-separated: id, category, since, scope, ERE pattern, note.
+# category: removed (breaks compile/run from <since>), renamed (artifact, package or config key renamed at <since>; quarkus update
+#           usually rewrites it), deprecated (warns from <since>), behavior (semantics change at <since>).
+# since: dotted Quarkus stream where the change lands (3.9). scope: java (*.java), build (pom.xml, *.gradle*, gradle.properties),
+#        config (application.properties/yaml, scripts, Dockerfiles, CI).
+# Range rule (scan.sh --framework quarkus --from F --to T): every category when F < since <= T.
+# Sources: wiki Migration-Guide-<since>. Patterns are POSIX ERE without \b or \s so rg and grep -E agree.
+javax-ee	renamed	3.0	java	import[[:space:]]+(static[[:space:]]+)?javax\.(inject|ws\.rs|persistence|enterprise|validation|interceptor|decorator|json|servlet|websocket|annotation\.(PostConstruct|PreDestroy|Priority|security)|transaction\.[A-Z])	Jakarta EE 10: javax.* EE packages become jakarta.* (javax.transaction.xa and other JDK javax.* stay). quarkus update rewrites imports; check reflection strings and XML descriptors by hand
+hibernate-orm-6	behavior	3.0	java	import[[:space:]]+(static[[:space:]]+)?org\.hibernate\.	Hibernate ORM 5.6 to 6.2: API and behavior changes that the recipes do not cover. See the Hibernate ORM 5 to 6 guide and references/2.13-to-3.2.md
+rest-reactive-artifact	renamed	3.9	build	quarkus-(resteasy-reactive|rest-client-reactive|jaxrs-client-reactive)	3.9: RESTEasy Reactive extensions renamed to quarkus-rest* and quarkus-rest-client*. quarkus update rewrites them; Maven relocations cover the old names for now
+rest-reactive-config	renamed	3.9	config	quarkus\.(resteasy-reactive|rest-client-reactive)\.	3.9: config roots quarkus.resteasy-reactive.* and quarkus.rest-client-reactive.* become quarkus.rest.* and quarkus.rest-client.*
+hibernate-orm-7	behavior	3.24	java	import[[:space:]]+(static[[:space:]]+)?org\.hibernate\.	3.24: Hibernate ORM 7.0 / Jakarta Persistence 3.2. API removals and behavior changes; see references/3.20-to-3.27.md
+transactional-uni	behavior	3.35	java	@Transactional	3.35: @Transactional REST endpoints are no longer forced onto a worker thread. A method returning Uni runs on the event loop; add @Blocking if it blocks
+kafka-native-provider	deprecated	3.35	config	quarkus\.kafka\.devservices\.provider[[:space:]]*=[[:space:]]*kafka-native	3.35: kafka-native Dev Services provider deprecated; use upstream-kafka-native (now the default)
+tls-provider-package	removed	3.36	java	io\.quarkus\.tls\.runtime\.(KeyStoreProvider|KeyStoreAndKeyCertOptions|TrustStoreProvider|TrustStoreAndTrustOptions)	3.36: TLS provider types moved to io.quarkus.tls in quarkus-tls-registry-spi; old classes are gone
+panache-next	renamed	3.37	build	quarkus-hibernate-panache-next	3.37: Panache Next renamed to Quarkus Data (quarkus-data-hibernate). quarkus update rewrites the dependency
+late-bound-span-processor	removed	3.38	java	LateBoundSpanProcessor	3.38: LateBoundSpanProcessor removed (deprecated in 3.36). Use SpanProcessorCustomizer
+http-host-localhost	behavior	3.38	config	quarkus\.http\.host[[:space:]]*=[[:space:]]*(localhost|127\.0\.0\.1|\[::1\])	3.38: Host header must be a localhost name when quarkus.http.host is localhost. Behind a proxy set quarkus.http.host-validation.allowed-hosts
+elasticsearch-rest-client	removed	3.38	java	import[[:space:]]+org\.elasticsearch\.client\.	3.38: low-level client switched to co.elastic.clients.transport.rest5_client.low_level.Rest5Client (Apache HTTP client 5)
+amqp-devservices-image	behavior	3.38	config	activemq-artemis-broker	3.38: AMQP Dev Services image moved to quay.io/arkmq-org/arkmq-org-broker with artemis.X.Y.Z tags
+fileupload-filename	behavior	3.38	java	FileUpload	3.38: FileUpload#fileName() is sanitized (path stripped) and may return null; no switch restores the old value

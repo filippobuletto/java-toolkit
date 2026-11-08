@@ -153,6 +153,38 @@ check "scan without --security: never reports security signals" "" "$(ids "$out"
 out=$(scan "$FIX/maven-java8" --security)
 check "scan --security: legacy fixture has none of the fixture-only signals" "false" "$([[ $(ids "$out") == *tls-trust* ]] && echo true || echo false)"
 
+# --- scan.sh --framework quarkus -------------------------------------------------------------
+QCAT="$ROOT/skills/java-framework-upgrade/scripts/quarkus.tsv"
+bad=$(awk -F'\t' '!/^#/ && NF && (NF != 6 || $2 !~ /^(removed|renamed|deprecated|behavior)$/ || $3 !~ /^[0-9]+\.[0-9]+$/ || $4 !~ /^(java|build|config)$/) { print NR": "$0 }' "$QCAT")
+check "quarkus catalog: rows have 6 fields, known category/scope, dotted since" "" "$bad"
+dups=$(awk -F'\t' '!/^#/ && NF { print $1 }' "$QCAT" | sort | uniq -d | paste -sd, -)
+check "quarkus catalog: ids unique" "" "$dups"
+
+QM="$FIX/quarkus-2.16-maven" QG="$FIX/quarkus-3.20-gradle-kts"
+out=$(scan "$QM" --framework quarkus --from 2.16 --to 3.2)
+check "scan quarkus 2.16→3.2: jakarta namespace" "javax-ee" "$(ids "$out")"
+check "scan quarkus 2.16→3.2: location is relative path:line" \
+  "src/main/java/org/acme/greeting/Greeting.java:5" "$(awk -F'\t' '$1 == "javax-ee" { print $4; exit }' <<<"$out")"
+out=$(scan "$QM" --framework quarkus --from 2.16 --to 3.40)
+check "scan quarkus 2.16→3.40: renames and behavior" \
+  "javax-ee,rest-reactive-artifact,rest-reactive-config,transactional-uni" "$(ids "$out")"
+out=$(scan "$QG" --framework quarkus --from 3.20 --to 3.40)
+check "scan quarkus 3.20→3.40: gradle fixture" \
+  "http-host-localhost,kafka-native-provider,tls-provider-package,transactional-uni" "$(ids "$out")"
+check "scan quarkus 3.20→3.40: removed sorts first" "removed" "$(head -n1 <<<"$out" | cut -f2)"
+out=$(scan "$QG" --framework quarkus --from 3.20 --to 3.33)
+check "scan quarkus 3.20→3.33: nothing in range" "" "$(ids "$out")"
+sum=$(scan "$QM" --framework quarkus --from 2.16 --to 3.2 --summary)
+check "scan quarkus --summary: javax-ee counts every import" "7" "$(awk -F'\t' '$1 == "javax-ee" { print $4 }' <<<"$sum")"
+
+check "scan without --framework: never reports Quarkus signals" "" \
+  "$(ids "$(scan "$QM" --from 11 --to 21)" | tr ',' '\n' | grep -xFf <(awk -F'\t' '!/^#/ && NF { print $1 }' "$QCAT") | paste -sd, -)"
+check "scan --framework quarkus: JDK signals never reported" "" "$(ids "$(scan "$FIX/maven-java8" --framework quarkus --from 2.13 --to 4.0)")"
+scan "$QM" --framework spring --from 2.0 --to 3.0 >/dev/null 2>&1; rc=$?
+check "scan --framework: unknown framework is a usage error" "2" "$rc"
+scan "$QM" --framework quarkus --security >/dev/null 2>&1; rc=$?
+check "scan --framework with --security: usage error" "2" "$rc"
+
 echo
 echo "$pass passed, $fail failed"
 [[ $fail -eq 0 ]]
