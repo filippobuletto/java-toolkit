@@ -37,6 +37,8 @@ cms-gc    flag     14  1  JEP 363: CMS removed in 14. Use G1 (default) or ZGC
 ...
 ```
 
+`scan.sh --security` switches to a second catalog slice for `java-secure-coding`: 20 candidate signals from the Oracle guidelines (deserialization, XML factories, SQL and command construction, mutable statics, native methods, TLS trust overrides, archives, `--add-opens`). Upgrade scans never report them, and in security mode comment lines are skipped.
+
 Ground rules the skills follow: no edits before you confirm the plan, green baseline first, one hop at a time, no preview features or modernization unless you opt in, tests are never weakened, and JDKs are never installed for you.
 
 All version facts live in one file, [jdk-matrix.md](skills/java-upgrade/references/jdk-matrix.md), checked against openjdk.org. It also lists common wrong advice that the skills avoid, such as String Templates (removed in 23), `-XX:+ZGenerational` (obsolete in 24) and `StructuredTaskScope.ShutdownOnFailure` (gone in 25).

@@ -23,18 +23,14 @@ Source: Oracle "Secure Coding Guidelines for Java SE", version 11.0 (June 2025).
 ## Review procedure
 
 1. Map trust boundaries first (FUNDAMENTALS-4): network handlers, file and archive input, message consumers, deserialization, native calls, plugin or script loading. Review code reachable from them before the rest.
-2. Find candidate sites. Each hit is a candidate, not a finding; read the code and data flow.
+2. Find candidate sites with the plugin scanner. It reports only security signals, ignores comment lines, and `--to <R>` hides signals that need a newer release:
 
    ```bash
-   rg -n --type java -e 'ObjectInputStream|readObject\(|XMLDecoder|ObjectInputFilter' <root>    # serialization.md
-   rg -n --type java -e 'DocumentBuilderFactory|SAXParserFactory|XMLInputFactory|TransformerFactory|SchemaFactory|XPathFactory' <root>  # injection.md XML
-   rg -n --type java -e 'createStatement|executeQuery\(|executeUpdate\(|createQuery\(|createNativeQuery\(' <root>  # injection.md SQL
-   rg -n --type java -e 'Runtime\.getRuntime\(\)\.exec|ProcessBuilder|ScriptEngine|InitialContext|\.lookup\(' <root>  # injection.md
-   rg -n --type java -e 'ZipInputStream|ZipFile|GZIPInputStream|Paths?\.(get|of)\(|\.resolve\(' <root>  # input-validation-native.md, dos-resources.md
-   rg -n --type java -e 'native |loadLibrary|System\.load\(' <root>  # input-validation-native.md
-   rg -n --type java --pcre2 -e 'p(ublic|rotected) static (?!final)[\w<>\[\], ?]+ \w+\s*[=;]|public static final [\w<>, ?]*(\[\]|List<|Map<|Set<|Collection<)|\.clone\(\)' <root>  # mutability.md
-   rg -n --type java -e 'setAccessible|InvocationHandler|MethodHandles\.lookup|doPrivileged|SecurityManager|setDefault(HostnameVerifier|SSLSocketFactory)?\(' <root>  # access-control-legacy.md
+   bash ${CLAUDE_PLUGIN_ROOT}/skills/java-upgrade/scripts/scan.sh <root> --security --to <R> --summary
+   bash ${CLAUDE_PLUGIN_ROOT}/skills/java-upgrade/scripts/scan.sh <root> --security --to <R> | awk -F'\t' '$1 == "<signal-id>"'
    ```
+
+   Each row carries the guideline id and the reference to load in its note. Signals are candidates, not findings: read the site and its data flow. Known gaps: `xml-factory` lists hardened and default factories alike, the scan sees one line at a time, and it includes test sources (skip them by path). It cannot see path handling from request input, `clone()` on subclassable inputs, `double` parsing at boundaries, or serializable classes that lack a `readObject`. Cover those by reading the code behind the trust boundaries from step 1.
 
 3. Load only the references the hits need (table below) and judge each site against its rules and checklist.
 4. Report findings ordered by severity. For each: `path:line`, guideline id, what an attacker controls and gains, and the fix as code that compiles on `R`. Separate confirmed findings from "needs context" items. Report no finding without a reachable source of untrusted data, except dangerous defaults (trust-all TLS, unfiltered deserialization, unhardened XML parsing of external files).
