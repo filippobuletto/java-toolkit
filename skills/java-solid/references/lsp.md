@@ -69,7 +69,7 @@ record ColorPoint(Point point, String color) {}
 
 ## Composition over inheritance
 
-Subclassing a concrete class couples you to its self-use. `HashSet.addAll` calls `add`, so a subclass counting in both double-counts (errata.md). Hold the delegate instead. `AbstractCollection.addAll` documents that it calls `add` for each element, so counting in `add` alone is correct.
+Subclassing a concrete class couples you to its self-use. `HashSet.addAll` calls `add`, so a subclass counting in both double-counts. Hold the delegate instead. `AbstractCollection.addAll` documents that it calls `add` for each element, so counting in `add` alone is correct.
 
 <!-- compile: jdk=8 -->
 ```java

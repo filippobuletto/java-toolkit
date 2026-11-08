@@ -1,11 +1,11 @@
 ---
-description: SOLID skill must catch the broken blog snippet, name the real defect, and give a delegating fix that compiles
+description: SOLID skill must catch a broken LSP snippet, name the real defect, and give a delegating fix that compiles
 tags: [solid]
 runs: 3
 max_turns: 10
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
-I found this Liskov Substitution example in a "SOLID Java" blog post and want to use it in a training. Is it correct Java, and does it really show an LSP violation? Give me the version I should show.
+I found this Liskov Substitution example online and want to use it in a training. Is it correct Java, and does it really show an LSP violation? Give me the version I should show.
 
 ```java
 // BAD

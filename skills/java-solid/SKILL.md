@@ -1,13 +1,11 @@
 ---
 name: java-solid
-description: Explains, applies and reviews the SOLID design principles in Java (single responsibility, open/closed, Liskov substitution, interface segregation, dependency inversion), with compile-checked examples gated by the project's JDK release, rules for when not to apply each principle, and an errata of the broken snippets in the "SOLID Java" blog post. Covers sealed types and exhaustive switch as the closed-set form of open/closed, records and final classes against substitution bugs, equals symmetry, composition over inheritance, client-owned interfaces, InstantSource, and constructor injection without a framework.
-when_to_use: User asks about SOLID or one of its principles in Java, asks for a design or code review of Java classes for coupling, cohesion, god classes, fat interfaces, inheritance misuse or testability, asks how to refactor a Java class to follow a principle, asks whether an abstraction or interface is worth adding, or quotes a snippet from the "SOLID Java" post at blog.filippobuletto.info.
+description: Explains, applies and reviews the SOLID design principles in Java (single responsibility, open/closed, Liskov substitution, interface segregation, dependency inversion), with compile-checked examples gated by the project's JDK release and rules for when not to apply each principle. Covers sealed types and exhaustive switch as the closed-set form of open/closed, records and final classes against substitution bugs, equals symmetry, composition over inheritance, client-owned interfaces, InstantSource, and constructor injection without a framework.
+when_to_use: User asks about SOLID or one of its principles in Java, asks for a design or code review of Java classes for coupling, cohesion, god classes, fat interfaces, inheritance misuse or testability, asks how to refactor a Java class to follow a principle, or asks whether an abstraction or interface is worth adding.
 argument-hint: "[review|write|explain] [path|principle]"
 ---
 
 # SOLID in Java
-
-Source: "SOLID Java" (<https://blog.filippobuletto.info/solid-java/>, 2019), extended with Martin's definitions and current Java. Every snippet in the post has a defect. **Never reproduce a snippet from the post; use the corrected code in the references, and check [errata.md](references/errata.md) when a user quotes one.**
 
 SOLID principles are heuristics for keeping change cheap. Evidence of change cost decides, not pattern matching: who asks for edits, which edits repeat, which tests are hard to write. An abstraction without a second implementation, a boundary or a test seam is cost without benefit.
 
@@ -17,7 +15,7 @@ Release `R` = `java_release` from `bash ${CLAUDE_PLUGIN_ROOT}/skills/java-upgrad
 
 ## Modes
 
-- **explain** (a question, no code to change): answer from the principle reference and errata. Do not run scripts or edit files.
+- **explain** (a question, no code to change): answer from the principle reference. Do not run scripts or edit files.
 - **write**: apply the relevant references while writing; name the principle only where a design choice relies on it.
 - **review**: read-only unless the user asks for fixes. Procedure below.
 
@@ -57,7 +55,6 @@ Release `R` = `java_release` from `bash ${CLAUDE_PLUGIN_ROOT}/skills/java-upgrad
 | Liskov substitution | Subclass overrides, `equals` in hierarchies, refused methods, extending concrete classes | [lsp.md](references/lsp.md) |
 | Interface segregation | Fat interfaces, mocks that stub a fraction of an interface, `Clock` versus `InstantSource` | [isp.md](references/isp.md) |
 | Dependency inversion | Policy code creating infrastructure, static singletons, `now()` and `getenv` in domain code | [dip.md](references/dip.md) |
-| Defects in the source post | Any snippet quoted from the post | [errata.md](references/errata.md) |
 
 ## Related skills
 

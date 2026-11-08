@@ -48,7 +48,7 @@ static final class UserSettingService {
 }
 ```
 
-Below release 16, write `User` as a final class with final fields. The source post made the policy a static method, which cannot be swapped (errata.md).
+Below release 16, write `User` as a final class with final fields. Keep the policy an instance behind an interface: a static method cannot be swapped or mocked.
 
 ## Smells
 

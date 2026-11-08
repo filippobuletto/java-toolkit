@@ -53,9 +53,9 @@ The guide's own snippets contain bugs: missing generic type parameters, `GzipOut
 
 ## SOLID design
 
-`java-solid` explains, writes and reviews Java code against the five SOLID principles, starting from the [SOLID Java](https://blog.filippobuletto.info/solid-java/) post. A review starts from churn hotspots in `git log`, finds candidate sites with `rg`, and reports each finding with its evidence (who changes the class, which edit repeats, which client breaks) and a fix that compiles on the project's release. Each principle has rules for when not to apply it, so the skill does not add interfaces nobody needs.
+`java-solid` explains, writes and reviews Java code against the five SOLID principles. A review starts from churn hotspots in `git log`, finds candidate sites with `rg`, and reports each finding with its evidence (who changes the class, which edit repeats, which client breaks) and a fix that compiles on the project's release. Each principle has rules for when not to apply it, so the skill does not add interfaces nobody needs.
 
-The references add current Java: `sealed` types with exhaustive `switch` as the closed-set form of open/closed, records and `final` classes against substitution bugs, `InstantSource` as interface segregation in the JDK, and constructor injection without a framework. Every snippet in the post has a defect (`public boolean function add`, package-private methods implementing an interface, a `Set` implementation missing 11 methods, undeclared fields). Each was compiled on JDK 21 and 25 and is listed in [errata.md](skills/java-solid/references/errata.md).
+The references add current Java: `sealed` types with exhaustive `switch` as the closed-set form of open/closed, records and `final` classes against substitution bugs, `InstantSource` as interface segregation in the JDK, and constructor injection without a framework. Every example compiles on the JDK its marker claims, checked by `compile-snippets.sh`.
 
 ## Requirements
 

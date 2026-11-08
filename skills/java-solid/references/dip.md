@@ -71,7 +71,7 @@ static final class InMemoryInvoiceStore implements InvoiceStore {
 - Policy code creates infrastructure: `new JdbcTemplate(...)`, `HttpClient.newHttpClient()`, `new FooRepositoryImpl()`.
 - Static calls into infrastructure or singletons: `Foo.getInstance()`, static `*Util` that does I/O.
 - Domain packages import `java.sql`, HTTP clients or framework types. `jdeps -verbose:package` on the compiled classes shows the direction.
-- Interfaces that mirror one implementation's methods and live in its package (the source post's `Connector`/`Finder`, errata.md).
+- Interfaces that mirror one implementation's methods and live in its package.
 
 ## When not to apply
 
