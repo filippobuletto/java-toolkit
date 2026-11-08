@@ -1,26 +1,30 @@
 #!/usr/bin/env bash
 # Scan a Java project for upgrade signals listed in signals.tsv (same directory).
 #
-# Usage: scan.sh [ROOT] [--from N] [--to N] [--summary]
+# Usage: scan.sh [ROOT] [--from N] [--to N] [--summary] [--security]
 #   --from N    current JDK feature release (default 0)
 #   --to N      target JDK feature release (default 99)
 #   --summary   one line per signal with hit count instead of one line per hit
+#   --security  report only the security signals (Oracle Secure Coding Guidelines candidates) and
+#               nothing else; without it security signals are never reported. --to N hides signals
+#               that need a newer release, --from is ignored
 #
 # Output (TSV, no header), ordered removed, flag, deprecated, behavior, build, modernize:
 #   default:   id  category  since  path:line  note  matched-text
 #   --summary: id  category  since  hits       note  first-path:line
-# Range rule: removed/deprecated/behavior when FROM < since <= TO; flag/build/modernize when since <= TO.
+# Range rule: removed/deprecated/behavior when FROM < since <= TO; flag/build/modernize/security when since <= TO.
 # Uses rg when available, otherwise grep -E. Read-only.
 set -euo pipefail
 
 catalog="$(cd "$(dirname "$0")" && pwd)/signals.tsv"
-root=. from=0 to=99 summary=0
+root=. from=0 to=99 summary=0 security=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --from) from="$2"; shift 2 ;;
     --to) to="$2"; shift 2 ;;
     --summary) summary=1; shift ;;
-    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+    --security) security=1; shift ;;
+    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
     -*) echo "scan.sh: unknown option $1" >&2; exit 2 ;;
     *) root="$1"; shift ;;
   esac
@@ -56,6 +60,8 @@ ordered=$(awk -F'\t' '!/^#/ && NF' "$catalog" | while IFS=$'\t' read -r id cat s
 done | sort -t$'\t' -k1,1n -k2,2n -k3,3 | cut -f3-)
 
 while IFS=$'\t' read -r id cat since scope pattern note; do
+  [[ "$cat" == security ]] && sec=1 || sec=0
+  (( sec == security )) || continue
   case "$cat" in
     removed|deprecated|behavior) (( from < since && since <= to )) || continue ;;
     *) (( since <= to )) || continue ;;
@@ -66,6 +72,10 @@ while IFS=$'\t' read -r id cat since scope pattern note; do
     *) globs=("${config_globs[@]}") ;;
   esac
   hits=$(search "$pattern" "${globs[@]}" | sort -t: -k1,1 -k2,2n)
+  # Security candidates in Java sources: ignore javadoc and comment lines (examples and warnings quote the patterns)
+  if (( sec )) && [[ "$scope" == java ]]; then
+    hits=$(awk '{ t = $0; sub(/^[^:]*:[^:]*:/, "", t) } t !~ /^[[:space:]]*(\*|\/\/|\/\*)/' <<<"$hits")
+  fi
   [[ -n "$hits" ]] || continue
   if (( summary )); then
     count=$(wc -l <<<"$hits" | tr -d ' ')

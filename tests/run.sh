@@ -26,7 +26,7 @@ detect() { bash "$SCRIPTS/detect.sh" "$1"; }
 scan() { bash "$SCRIPTS/scan.sh" "$@"; }
 
 # --- signal catalog is well formed ---------------------------------------------------------
-bad=$(awk -F'\t' '!/^#/ && NF && (NF != 6 || $2 !~ /^(removed|deprecated|behavior|flag|build|modernize)$/ || $3 !~ /^[0-9]+$/ || $4 !~ /^(java|build|config)$/) { print NR": "$0 }' "$SCRIPTS/signals.tsv")
+bad=$(awk -F'\t' '!/^#/ && NF && (NF != 6 || $2 !~ /^(removed|deprecated|behavior|flag|build|modernize|security)$/ || $3 !~ /^[0-9]+$/ || $4 !~ /^(java|build|config)$/) { print NR": "$0 }' "$SCRIPTS/signals.tsv")
 check "catalog: rows have 6 fields, known category/scope, numeric since" "" "$bad"
 dups=$(awk -F'\t' '!/^#/ && NF { print $1 }' "$SCRIPTS/signals.tsv" | sort | uniq -d | paste -sd, -)
 check "catalog: ids unique" "" "$dups"
@@ -95,6 +95,36 @@ check "scan gradle 21→25: dead preview APIs and preview flag" \
 
 out=$(scan "$FIX/maven-java8")
 check "scan without range: reports every hit" "true" "$([[ $(ids "$out") == *finalize* && $(ids "$out") == *last-element* ]] && echo true || echo false)"
+
+# --- scan.sh --security ----------------------------------------------------------------------
+SEC="$FIX/secure-coding"
+out=$(scan "$SEC" --security)
+check "scan --security: signals found" \
+  "add-opens,archive-read,cloneable,invocation-handler,jdbc-statement,jndi-context,jndi-trust-flags,log-secret,module-opens,native-public,object-input-stream,process-exec,public-static-final-mutable,public-static-mutable,read-object-impl,script-engine,sql-concat,tls-trust,xml-decoder,xml-factory" \
+  "$(ids "$out")"
+check "scan --security: only the security category" "security" "$(cut -f2 <<<"$out" | sort -u)"
+check "scan --security: hardened file has no hits" "" "$(grep -F 'Hardened.java' <<<"$out")"
+check "scan --security: location is relative path:line" \
+  "src/main/java/com/example/secure/Archive.java:10" "$(awk -F'\t' '$1 == "archive-read" { print $4; exit }' <<<"$out")"
+check "scan --security: flags found in launch script" "start.sh" \
+  "$(awk -F'\t' '$1 == "add-opens" { split($4, a, ":"); print a[1] }' <<<"$out")"
+
+sum=$(scan "$SEC" --security --summary)
+check "scan --security --summary: xml-factory counts every factory" "3" "$(awk -F'\t' '$1 == "xml-factory" { print $4 }' <<<"$sum")"
+check "scan --security --summary: sql-concat finds call and variable forms" "2" "$(awk -F'\t' '$1 == "sql-concat" { print $4 }' <<<"$sum")"
+check "scan --security --summary: jdbc-statement counts createStatement" "2" "$(awk -F'\t' '$1 == "jdbc-statement" { print $4 }' <<<"$sum")"
+check "scan --security --summary: xml-decoder skips the import line" "1" "$(awk -F'\t' '$1 == "xml-decoder" { print $4 }' <<<"$sum")"
+check "scan --security --summary: script-engine skips the import line" "1" "$(awk -F'\t' '$1 == "script-engine" { print $4 }' <<<"$sum")"
+check "scan --security --summary: public static final mutable fields" "2" "$(awk -F'\t' '$1 == "public-static-final-mutable" { print $4 }' <<<"$sum")"
+
+out=$(scan "$SEC" --security --to 8)
+check "scan --security --to 8: hides module-only signals" "false" "$([[ $(ids "$out") == *module-opens* ]] && echo true || echo false)"
+check "scan --security --to 8: keeps the rest" "true" "$([[ $(ids "$out") == *xml-factory* ]] && echo true || echo false)"
+
+out=$(scan "$SEC" --from 8 --to 25)
+check "scan without --security: never reports security signals" "" "$(ids "$out" security)"
+out=$(scan "$FIX/maven-java8" --security)
+check "scan --security: legacy fixture has none of the fixture-only signals" "false" "$([[ $(ids "$out") == *tls-trust* ]] && echo true || echo false)"
 
 echo
 echo "$pass passed, $fail failed"
