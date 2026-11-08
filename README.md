@@ -2,7 +2,7 @@
 
 # java-toolkit
 
-A Claude Code plugin with skills for Java projects. Its first skill set upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads. A secure-coding skill reviews and writes Java code against the Oracle Secure Coding Guidelines for Java SE. A SOLID skill reviews and writes Java code against the five SOLID design principles.
+A Claude Code plugin with skills for Java projects. Its first skill set upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads. A companion router upgrades Quarkus from 2.13 to the 3.40 LTS in the same way, adding the JDK hops each Quarkus release needs. A secure-coding skill reviews and writes Java code against the Oracle Secure Coding Guidelines for Java SE. A SOLID skill reviews and writes Java code against the five SOLID design principles.
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffilippobuletto%2Fjava-toolkit%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version)](.claude-plugin/plugin.json)
 [![License](https://img.shields.io/github/license/filippobuletto/java-toolkit)](LICENSE)
@@ -43,7 +43,20 @@ Ground rules the skills follow: no edits before you confirm the plan, green base
 
 All version facts live in one file, [jdk-matrix.md](skills/java-upgrade/references/jdk-matrix.md), checked against openjdk.org. It also lists common wrong advice that the skills avoid, such as String Templates (removed in 23), `-XX:+ZGenerational` (obsolete in 24) and `StructuredTaskScope.ShutdownOnFailure` (gone in 25).
 
-Out of scope: framework major upgrades (Spring Boot, Jakarta EE namespace moves, Hibernate, JUnit majors). The plan lists them as prerequisites when they block the target JDK.
+Quarkus upgrades have their own router (see below). Other framework majors (Spring Boot, standalone Hibernate, JUnit) stay out of scope, and the plan lists them as prerequisites when they block the target JDK.
+
+## Framework upgrades
+
+`java-framework-upgrade` is the companion router for framework versions. It starts with Quarkus, from 2.13 to the 3.40 LTS. It walks the LTS streams one hop at a time (3.2, 3.8, 3.15, 3.20, 3.27, 3.33, 3.40) and puts the JDK hops each hop needs into the same plan. For example, Quarkus 3.7 and later need Java 17, so a Java 11 project runs `java-upgrade` to 17 before its 3.2 → 3.8 hop. Quarkus 4.0 is still beta (4.0.0.Beta3), so it has a reference but runs only when the user opts in.
+
+| Skill | Role |
+| :- | :- |
+| `java-framework-upgrade` | Detects the Quarkus version, extensions and JDK, writes `.framework-upgrade/plan.md` with JDK hops interleaved, runs it step by step, tracks `progress.md`, writes `summary.md` |
+| `java-quarkus-migrate` | One hop: `quarkus update --stream=<LTS>` (OpenRewrite recipes), diff review against the hop's automated items, then the manual items from the migration guides, verified on the hop's JDK |
+
+`detect.sh` reports `quarkus_version`, `quarkus_platform`, `quarkus_plugin`, `quarkus_extensions` and the installed `quarkus_cli`. `scan.sh --framework quarkus --from 3.20 --to 3.40` runs a separate catalog (`quarkus.tsv`) of renamed artifacts and config keys, removed APIs and behavior changes, keyed by the Quarkus version where each lands. JDK and security scans never report these rows.
+
+The recipes cover only part of each migration. Each hop reference splits the wiki migration guides into items to verify in the recipe diff and manual items with their fix. All version facts live in [quarkus-matrix.md](skills/java-quarkus-migrate/references/quarkus-matrix.md), checked against the Quarkus wiki and the source at each LTS tag.
 
 ## Secure coding
 
@@ -81,6 +94,8 @@ The references add current Java: `sealed` types with exhaustive `switch` as the 
 | `/java-toolkit:java-modernize records src/main/java` | Convert value classes to records |
 | `/java-toolkit:java-secure-coding review src/main/java` | Security review against the Oracle guidelines |
 | `/java-toolkit:java-solid review src/main/java` | Design review against the SOLID principles |
+| `/java-toolkit:java-framework-upgrade quarkus 3.40` | Assess and plan a Quarkus upgrade to 3.40, with the JDK hops it needs |
+| `/java-toolkit:java-quarkus-migrate 3.20-to-3.27` | Run one Quarkus hop, or ask what changes in it |
 
 Plain requests such as "upgrade this project to Java 21" also trigger the router.
 
