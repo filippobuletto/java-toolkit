@@ -9,6 +9,8 @@
 #   maven_modules=N  maven_version=   maven_compiler_plugin=  maven_surefire_plugin=  maven_failsafe_plugin=
 #   gradle_dsl=kotlin|groovy          gradle_version=
 #   uses=<comma list of build-blocker libraries found in build files>
+#   quarkus_version=  quarkus_stream=X.Y  quarkus_platform=<BOM groupId>  quarkus_plugin=
+#   quarkus_extensions=<comma list of quarkus-* artifactIds>  quarkus_cli=<installed CLI version>
 #   ci_java=<comma list>  docker_java=<comma list>  pinned_java=<.sdkmanrc/.java-version/.tool-versions>
 #   jdk.N=<home>                      one line per installed JDK feature release (sdkman, macOS, JAVA_HOME)
 #   java_home=<JAVA_HOME>             java_home_release=N
@@ -47,6 +49,7 @@ elif [[ -f gradlew ]]; then out wrapper gradlew
 else out wrapper none; fi
 
 release= release_from=
+q_version= q_platform= q_plugin=
 
 # --- maven ----------------------------------------------------------------------------------
 if [[ "$tool" == maven ]]; then
@@ -88,6 +91,11 @@ if [[ "$tool" == maven ]]; then
   for p in compiler surefire failsafe; do
     out "maven_${p}_plugin" "$(resolve "$(plugin_conf "maven-$p-plugin" version)")"
   done
+  for key in quarkus.platform.version quarkus.version quarkus-plugin.version; do
+    q_version=$(resolve "$(prop "$key")"); [[ -n "$q_version" ]] && break
+  done
+  q_platform=$(resolve "$(prop quarkus.platform.group-id)")
+  q_plugin=$(resolve "$(plugin_conf quarkus-maven-plugin version)")
 fi
 
 # --- gradle ---------------------------------------------------------------------------------
@@ -109,6 +117,14 @@ if [[ "$tool" == gradle ]]; then
       fi
     fi
   fi
+  gprop() { [[ -f gradle.properties ]] && sed -nE "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*([^[:space:]]+).*/\1/p" gradle.properties | head -n1 || true; }
+  q_version=$(gprop quarkusPlatformVersion)
+  q_platform=$(gprop quarkusPlatformGroupId)
+  q_plugin=$(gprop quarkusPluginVersion)
+  if [[ -z "$q_plugin" && -n "$gfiles" ]]; then
+    q_plugin=$(sed -nE 's/.*id[[:space:]]*\(?[[:space:]]*["'"'"']io\.quarkus["'"'"'][[:space:]]*\)?[[:space:]]*version[[:space:]]*["'"'"']([^"'"'"']+).*/\1/p' <<<"$g" | head -n1)
+  fi
+  q_version=${q_version:-$q_plugin}
 fi
 
 out java_release "$release"
@@ -127,6 +143,23 @@ if [[ -n "$files" ]]; then
   done
 fi
 out uses "${uses#,}"
+
+# --- Quarkus --------------------------------------------------------------------------------
+out quarkus_version "$q_version"
+out quarkus_stream "$(sed -nE 's/^([0-9]+\.[0-9]+).*/\1/p' <<<"$q_version")"
+out quarkus_platform "$q_platform"
+out quarkus_plugin "$q_plugin"
+ext=""
+if [[ -n "$files" ]]; then
+  # shellcheck disable=SC2086
+  ext=$(cat $files 2>/dev/null |
+    sed -nE 's#.*<artifactId>(quarkus-[a-z0-9-]+)</artifactId>.*#\1#p; s#.*["'"'"'][a-z0-9.]+:(quarkus-[a-z0-9-]+)[:"'"'"'].*#\1#p' |
+    { grep -vE -- '-bom$|^quarkus-(maven|gradle)-plugin$' || true; } | sort -u | join)
+fi
+out quarkus_extensions "$ext"
+q_cli=""
+command -v quarkus >/dev/null 2>&1 && q_cli=$(quarkus --version 2>/dev/null | head -n1 || true)
+out quarkus_cli "$q_cli"
 
 # --- CI, containers, pinned JDK -------------------------------------------------------------
 ci=$( { { cat .github/workflows/*.y*ml 2>/dev/null || true; } | sed -nE "s/.*java-version:[[:space:]]*['\"]?([0-9.]+).*/\1/p"

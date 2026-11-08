@@ -1,0 +1,13 @@
+arguments=--init-script /opt/homebrew/Cellar/jdtls/1.63.0/libexec/configuration/org.eclipse.osgi/57/0/.cp/gradle/init/init.gradle
+auto.sync=false
+build.scans.enabled=false
+connection.gradle.distribution=GRADLE_DISTRIBUTION(VERSION(9.7.1))
+connection.project.dir=
+eclipse.preferences.version=1
+gradle.user.home=
+java.home=/Users/filippo/.sdkman/candidates/java/21.0.13.0+9-zulu
+jvm.arguments=
+offline.mode=false
+override.workspace.settings=true
+show.console.view=true
+show.executions.view=true

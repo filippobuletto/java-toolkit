@@ -59,6 +59,33 @@ check "detect gradle: toolchain release" "21" "$(kv java_release "$out")"
 check "detect gradle: release source" "toolchain" "$(kv java_release_from "$out")"
 check "detect gradle: blocker libs" "mockito" "$(kv uses "$out")"
 
+check "detect plain java: no Quarkus" "" "$(kv quarkus_version "$out")"
+
+out=$(detect "$FIX/quarkus-2.16-maven")
+check "detect quarkus maven: version from platform property" "2.16.12.Final" "$(kv quarkus_version "$out")"
+check "detect quarkus maven: stream" "2.16" "$(kv quarkus_stream "$out")"
+check "detect quarkus maven: platform group" "io.quarkus.platform" "$(kv quarkus_platform "$out")"
+check "detect quarkus maven: plugin version resolved" "2.16.12.Final" "$(kv quarkus_plugin "$out")"
+check "detect quarkus maven: extensions" \
+  "quarkus-arc,quarkus-hibernate-orm-panache,quarkus-jdbc-postgresql,quarkus-junit5,quarkus-resteasy-reactive-jackson" \
+  "$(kv quarkus_extensions "$out")"
+check "detect quarkus maven: release" "11" "$(kv java_release "$out")"
+
+out=$(detect "$FIX/quarkus-3.20-gradle-kts")
+check "detect quarkus gradle: version from gradle.properties" "3.20.6.2" "$(kv quarkus_version "$out")"
+check "detect quarkus gradle: stream" "3.20" "$(kv quarkus_stream "$out")"
+check "detect quarkus gradle: platform group" "io.quarkus.platform" "$(kv quarkus_platform "$out")"
+check "detect quarkus gradle: plugin version" "3.20.6.2" "$(kv quarkus_plugin "$out")"
+check "detect quarkus gradle: extensions" \
+  "quarkus-hibernate-orm,quarkus-junit5,quarkus-opentelemetry,quarkus-rest,quarkus-tls-registry" \
+  "$(kv quarkus_extensions "$out")"
+
+groovy=$(mktemp -d /private/tmp/java-upgrade-quarkus-groovy.XXXX)
+printf "plugins {\n    id 'java'\n    id 'io.quarkus' version '3.8.6'\n}\n" >"$groovy/build.gradle"
+out=$(detect "$groovy")
+check "detect quarkus groovy: plugin version from plugins block" "3.8.6" "$(kv quarkus_plugin "$out")"
+check "detect quarkus groovy: version falls back to plugin" "3.8" "$(kv quarkus_stream "$out")"
+
 empty=$(mktemp -d /private/tmp/java-upgrade-empty.XXXX)
 check "detect empty dir: no build tool" "none" "$(kv build_tool "$(detect "$empty")")"
 
