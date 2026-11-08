@@ -27,18 +27,20 @@ Release `R` = `java_release` from `bash ${CLAUDE_PLUGIN_ROOT}/skills/java-upgrad
    git -C <root> log --since=1.year --format= --name-only -- '*.java' | sort | uniq -c | sort -rn | head -20
    ```
 
-2. Find candidate sites. Hits are candidates, not findings; read each site:
+2. Find candidate sites with the Grep tool (type `java`, line numbers on; skip hits under test directories). Hits are candidates, not findings; read each site:
 
-   ```bash
+   ```text
    # SRP: catch-all classes
-   rg -n --type java -g '!**/test/**' 'class \w*(Manager|Helper|Utils?|Processor)\b' <root>
+   class \w*(Manager|Helper|Utils?|Processor)\b
    # OCP: type-code branching
-   rg -n --type java -g '!**/test/**' -e '\binstanceof\s+\w+' -e 'switch\s*\(\s*\w*(type|kind)\w*' <root>
-   # LSP, ISP: refused methods
-   rg -n --type java -g '!**/test/**' -B3 'throw new UnsupportedOperationException' <root>
+   \binstanceof\s+\w+|switch\s*\(\s*\w*([Tt]ype|[Kk]ind)\w*
+   # LSP, ISP: refused methods (show 3 lines of context before each hit)
+   throw new UnsupportedOperationException
    # DIP: policy code creating or calling details
-   rg -n --type java -g '!**/test/**' -e 'new \w*(Repository|Dao|Client|Template|Connection)\w*\(' -e '\.getInstance\(\)' -e 'System\.(getProperty|getenv)\(' -e '\b(Instant|LocalDate|LocalDateTime|ZonedDateTime)\.now\(\)' <root>
+   new \w*(Repository|Dao|Client|Template|Connection)\w*\(|\.getInstance\(\)|System\.(getProperty|getenv)\(|\b(Instant|LocalDate|LocalDateTime|ZonedDateTime)\.now\(\)
    ```
+
+   The patterns use ripgrep syntax (`\w`, `\b`, `\s`), which the Grep tool takes as is. From a shell, run them with `rg -n --type java -g '!**/test/**' '<pattern>' <root>`; plain `grep -E` does not support that syntax.
 
    Not visible to search: constructors with many collaborators, `equals` overridden in subclasses, interfaces whose clients use disjoint methods, import direction between packages (`jdeps -verbose:package`). Read the hotspot classes for those.
 
