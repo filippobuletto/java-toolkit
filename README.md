@@ -2,7 +2,7 @@
 
 # java-toolkit
 
-A Claude Code plugin with skills for Java projects. Its first skill set upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads. A secure-coding skill reviews and writes Java code against the Oracle Secure Coding Guidelines for Java SE.
+A Claude Code plugin with skills for Java projects. Its first skill set upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads. A secure-coding skill reviews and writes Java code against the Oracle Secure Coding Guidelines for Java SE. A SOLID skill reviews and writes Java code against the five SOLID design principles.
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffilippobuletto%2Fjava-toolkit%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version)](.claude-plugin/plugin.json)
 [![License](https://img.shields.io/github/license/filippobuletto/java-toolkit)](LICENSE)
@@ -51,6 +51,12 @@ Out of scope: framework major upgrades (Spring Boot, Jakarta EE namespace moves,
 
 The guide's own snippets contain bugs: missing generic type parameters, `GzipOutputStream`, `prepStmt`, `fields.get("data")`, a `readObject` that drops every field, an `InvocationHandler` whose `hashCode` returns `true`, `System.loadLibrary("/com/foo/MyLib.so")`, plus wrong facts and method names. Each one was compiled or run on JDK 21 and 25 and is listed with its evidence in [errata.md](skills/java-secure-coding/references/errata.md). The skill ships corrected versions, compiled by `compile-snippets.sh`.
 
+## SOLID design
+
+`java-solid` explains, writes and reviews Java code against the five SOLID principles, starting from the [SOLID Java](https://blog.filippobuletto.info/solid-java/) post. A review starts from churn hotspots in `git log`, finds candidate sites with `rg`, and reports each finding with its evidence (who changes the class, which edit repeats, which client breaks) and a fix that compiles on the project's release. Each principle has rules for when not to apply it, so the skill does not add interfaces nobody needs.
+
+The references add current Java: `sealed` types with exhaustive `switch` as the closed-set form of open/closed, records and `final` classes against substitution bugs, `InstantSource` as interface segregation in the JDK, and constructor injection without a framework. Every snippet in the post has a defect (`public boolean function add`, package-private methods implementing an interface, a `Set` implementation missing 11 methods, undeclared fields). Each was compiled on JDK 21 and 25 and is listed in [errata.md](skills/java-solid/references/errata.md).
+
 ## Requirements
 
 - `bash` (3.2+), `awk`, `sed`, `find`; `rg` is used when present, `grep -E` otherwise
@@ -74,6 +80,7 @@ The guide's own snippets contain bugs: missing generic type parameters, `GzipOut
 | `/java-toolkit:java-upgrade resume` | Continue from `.java-upgrade/progress.md` |
 | `/java-toolkit:java-modernize records src/main/java` | Convert value classes to records |
 | `/java-toolkit:java-secure-coding review src/main/java` | Security review against the Oracle guidelines |
+| `/java-toolkit:java-solid review src/main/java` | Design review against the SOLID principles |
 
 Plain requests such as "upgrade this project to Java 21" also trigger the router.
 
