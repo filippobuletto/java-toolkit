@@ -41,16 +41,19 @@ Recommended JDK is what the Quarkus build recommends at that tag; running on a n
 
 `quarkus update` runs OpenRewrite recipes from `io.quarkus:quarkus-update-recipes` (<https://github.com/quarkusio/quarkus-updates>). It applies every recipe between the project's version and the target stream. Recipes exist for 3.0 onward; there are none for 2.x minors. The recipes cover only part of a migration: guide items marked `:gear: :white_check_mark:` are automated, everything else is manual.
 
-| Build | Command (one hop) |
-|-------|-------------------|
-| CLI | `quarkus update --stream=<X.Y>` |
-| Maven | `./mvnw io.quarkus.platform:quarkus-maven-plugin:<target-version>:update -N -Dstream=<X.Y>` |
-| Gradle | `./gradlew -PquarkusPluginVersion=<target-version> quarkusUpdate --stream=<X.Y>` |
+| Build | Command (one hop, applies the recipes) | Dry run (diff only) |
+|-------|----------------------------------------|---------------------|
+| CLI | `quarkus update --stream=<X.Y> --yes` | `--dry-run` |
+| Maven | `./mvnw -B io.quarkus.platform:quarkus-maven-plugin:<target-version>:update -N -Dstream=<X.Y> -Drewrite=true` | `-DrewriteDryRun=true` |
+| Gradle (Groovy DSL) | `./gradlew -PquarkusPluginVersion=<target-version> quarkusUpdate --stream=<X.Y> --rewrite` | `--rewriteDryRun` |
 
+- Always pass the confirm flag (`--yes`, `-Drewrite=true`, `--rewrite`). Without a terminal the update asks "Do you want to apply the generated update recipes", reads no answer, prints `Project update has been skipped` and still exits 0 with BUILD SUCCESS. An empty `git diff` after a run means it was skipped.
 - `<target-version>` is the latest tag of the target stream from the table above. The plugin must be at least as new as the target: a 2.16 project updates with the 3.2 plugin, not its own.
-- `-PquarkusPluginVersion` works when the Gradle build reads the plugin version from `quarkusPluginVersion` in `gradle.properties` (the generated default). Otherwise run the CLI, or set the plugin version in the build file by hand first.
-- Shared options (CLI `--x`, Maven `-Dx`, Gradle `--x`): `stream`, `platformVersion`, `rewriteDryRun` (diff only), `rewrite=false` (version bump only, no recipes), `additionalUpdateRecipes`, `quarkusUpdateRecipes`, `rewritePluginVersion`.
+- `-PquarkusPluginVersion` works when the Gradle build reads the plugin version from `quarkusPluginVersion` in `gradle.properties` (the generated default). Otherwise set the plugin version in the build file by hand first.
+- **Gradle Kotlin DSL is not supported.** The Gradle task fails with `QuarkusUpdateException: gradle-kotlin-dsl is not supported yet`. The 3.40 CLI also failed on a Kotlin DSL project, leaving the tree unchanged. For `build.gradle.kts`, raise `quarkusPlatformVersion` and `quarkusPluginVersion` in `gradle.properties` to the target tag by hand, and treat the hop's "Automated (verify)" items as manual.
+- Other options (CLI `--x`, Maven `-Dx`, Gradle `--x`): `platformVersion`, `additionalUpdateRecipes`, `quarkusUpdateRecipes`, `rewritePluginVersion`; Maven and Gradle also take `rewrite=false` (version bump only), CLI `--no-rewrite`.
 - The CLI must be at least as new as the target stream. The skills never install or upgrade it; they fall back to the Maven or Gradle form.
+- Checked end to end 2026-11-08 with CLI 3.40.1.1, Maven 3.10.0 and the generated Gradle 8.14 wrapper on JDK 17: Maven 3.20 → 3.27 (version bump, `database.generation` → `schema-management.strategy`, `.enable` → `.enabled`), CLI 3.27 → 3.33 (`quarkus-junit5` → `quarkus-junit`, `@{argLine}`), Gradle Groovy 3.20 → 3.27. Build and tests green after each.
 
 ## Corrections
 

@@ -91,7 +91,7 @@ Quarkus <from> → <to>, JDK <release> → <release>, build tool <maven|gradle> 
 
 | # | Step | Status | Evidence |
 |---|------|--------|----------|
-| 1 | Quarkus 2.16 → 3.2 | done | `quarkus update --stream=3.2`, 41 files; `./mvnw -B -ntp verify` green on JDK 11 (12 tests) |
+| 1 | Quarkus 2.16 → 3.2 | done | `quarkus update --stream=3.2 --yes`, 41 files; `./mvnw -B -ntp verify` green on JDK 11 (12 tests) |
 | 2 | JDK 11 → 17 | in progress | .java-upgrade/progress.md |
 
 ## Recipe changes outside the hop reference

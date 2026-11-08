@@ -19,12 +19,12 @@ Inputs: the hop, the project root, the build JDK home (`jdk.N` from detect) and 
 2. **Recipe run.** Run the update pinned to the hop's stream. Use the CLI if `quarkus_cli` is at least the target stream; otherwise use the Maven or Gradle form, with the plugin version from the reference header:
 
    ```bash
-   quarkus update --stream=<X.Y>
-   ./mvnw io.quarkus.platform:quarkus-maven-plugin:<target-version>:update -N -Dstream=<X.Y>
-   ./gradlew -PquarkusPluginVersion=<target-version> quarkusUpdate --stream=<X.Y>
+   quarkus update --stream=<X.Y> --yes
+   ./mvnw -B io.quarkus.platform:quarkus-maven-plugin:<target-version>:update -N -Dstream=<X.Y> -Drewrite=true
+   ./gradlew -PquarkusPluginVersion=<target-version> quarkusUpdate --stream=<X.Y> --rewrite
    ```
 
-   On a large project, run with `rewriteDryRun` first and show the user the patch size. Never install or upgrade the CLI.
+   Keep the confirm flag: without it the update skips itself and still exits 0. Treat `Project update has been skipped` or an empty `git diff` as a failed run. On a large project, dry-run first (`--dry-run`, `-DrewriteDryRun=true`, `--rewriteDryRun`) and show the user the patch size. Gradle Kotlin DSL (`gradle_dsl=kotlin`) cannot run the recipes: bump `quarkusPlatformVersion` and `quarkusPluginVersion` in `gradle.properties` by hand and apply the "Automated (verify)" items as manual ones. Never install or upgrade the CLI.
 3. **Diff review.** Read `git diff`. Every item under "Automated (verify)" in the hop reference must appear in the diff or be not applicable. Record anything the recipe changed outside that list in progress.md. Revert nothing silently; when a recipe change looks wrong, ask.
 4. **Manual items.** Run `scan.sh <root> --framework quarkus --from <a> --to <b>` from the `java-upgrade` scripts. Go through every Manual row of the reference: apply the fix, or mark it not applicable with a reason (extension not used, no hit). Group edits by area so each change is reviewable.
 5. **Verify.** Build and test on the hop's JDK. Behavior rows (threading, transactions, Host validation, Hibernate query semantics, Dev Services defaults) need a test run, not only a compile. Compare test counts with the baseline.

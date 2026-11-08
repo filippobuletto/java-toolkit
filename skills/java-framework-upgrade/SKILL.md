@@ -40,6 +40,7 @@ Run `bash ${CLAUDE_PLUGIN_ROOT}/skills/java-upgrade/scripts/detect.sh <project-r
 - `quarkus_stream` below 2.13: `quarkus update` does not support it. Stop and say the project must reach 2.13 by hand first.
 - `quarkus_platform` is `io.quarkus` (core BOM, not the platform): note it; Quarkiverse versions must then be managed by hand.
 - Multi-module: read child build files too; the version may be set per module.
+- `gradle_dsl=kotlin`: `quarkus update` cannot apply recipes to Kotlin DSL builds. Say so in the plan; every hop bumps versions by hand and applies the automated items manually.
 
 Ask for the target if it is missing. Offer the next LTS above the current stream, the latest LTS (3.40), and 4.0 marked beta.
 
