@@ -158,7 +158,8 @@ if [[ -n "$files" ]]; then
 fi
 out quarkus_extensions "$ext"
 q_cli=""
-command -v quarkus >/dev/null 2>&1 && q_cli=$(quarkus --version 2>/dev/null | head -n1 || true)
+# Run outside the project: the CLI writes .quarkus/ into the enclosing project or git root
+command -v quarkus >/dev/null 2>&1 && q_cli=$(cd "${TMPDIR:-/tmp}" && quarkus --version 2>/dev/null | head -n1 || true)
 out quarkus_cli "$q_cli"
 
 # --- CI, containers, pinned JDK -------------------------------------------------------------

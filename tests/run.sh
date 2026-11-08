@@ -80,6 +80,14 @@ check "detect quarkus gradle: extensions" \
   "quarkus-hibernate-orm,quarkus-junit5,quarkus-opentelemetry,quarkus-rest,quarkus-tls-registry" \
   "$(kv quarkus_extensions "$out")"
 
+if command -v quarkus >/dev/null 2>&1; then
+  repo=$(mktemp -d /private/tmp/java-upgrade-quarkus-repo.XXXX)
+  cp -R "$FIX/quarkus-2.16-maven/." "$repo" && git -C "$repo" init -q
+  out=$(detect "$repo")
+  check "detect quarkus: reports the installed CLI" "true" "$([[ -n $(kv quarkus_cli "$out") ]] && echo true || echo false)"
+  check "detect quarkus: CLI call leaves no files in the project" "" "$(cd "$repo" && git status --porcelain --ignored | grep -F .quarkus || true)"
+fi
+
 groovy=$(mktemp -d /private/tmp/java-upgrade-quarkus-groovy.XXXX)
 printf "plugins {\n    id 'java'\n    id 'io.quarkus' version '3.8.6'\n}\n" >"$groovy/build.gradle"
 out=$(detect "$groovy")
