@@ -2,7 +2,7 @@
 
 # java-toolkit
 
-A Claude Code plugin with skills for Java projects. Its first skill set upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads. A companion router upgrades Quarkus from 2.13 to the 3.40 LTS in the same way, adding the JDK hops each Quarkus release needs. A secure-coding skill reviews and writes Java code against the Oracle Secure Coding Guidelines for Java SE. A SOLID skill reviews and writes Java code against the five SOLID design principles.
+A Claude Code plugin with skills for Java projects. Its first skill set upgrades Java projects from JDK 8 up to JDK 27. It reads your Maven or Gradle build and your code, writes a plan you approve, then moves the project one LTS release at a time and checks the build and tests after every step. Optional skills adopt newer language features such as records, pattern matching and virtual threads. A companion router upgrades Quarkus from 2.13 to the 3.40 LTS in the same way, adding the JDK hops each Quarkus release needs. A secure-coding skill reviews and writes Java code against the Oracle Secure Coding Guidelines for Java SE. A SOLID skill reviews and writes Java code against the five SOLID design principles. A simplifier agent cleans up recently changed Java code with those skills loaded and checks the result with your build and tests.
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffilippobuletto%2Fjava-toolkit%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version)](.claude-plugin/plugin.json)
 [![License](https://img.shields.io/github/license/filippobuletto/java-toolkit)](LICENSE)
@@ -70,6 +70,21 @@ The guide's own snippets contain bugs: missing generic type parameters, `GzipOut
 
 The references add current Java: `sealed` types with exhaustive `switch` as the closed-set form of open/closed, records and `final` classes against substitution bugs, `InstantSource` as interface segregation in the JDK, and constructor injection without a framework. Every example compiles on the JDK its marker claims, checked by `compile-snippets.sh`.
 
+## Simplifier agent
+
+`java-simplifier` is a subagent that simplifies Java code without changing its behavior. It starts with `java-solid`, `java-modernize` and `java-secure-coding` loaded, so their "when not to" rules apply to every edit. It runs only when you ask for it by name.
+
+| Step | What it does |
+| :- | :- |
+| Scope | Java files changed since `HEAD` (staged, unstaged, untracked), or the paths you name. With neither, it stops instead of sweeping the repository. Test sources are read-only |
+| Gate | Reads the release with `detect.sh`. Every edit compiles on that release |
+| Baseline | Builds and tests first with the project's wrapper. A red baseline stops it before any edit |
+| Simplify | Flattens nesting, replaces nested ternaries, removes dead code, delegate-only wrappers and comments that restate the code |
+| Verify | Builds and tests again. It restores only its own edits to files that break, from a copy it took before editing, never with git |
+| Report | Changed and reverted files, and candidates it did not apply (API changes, unrequested modernization) |
+
+Newer Java features (records, pattern `switch`, text blocks) are adopted only when the request also asks to modernize. Otherwise they are listed as candidates. The agent never removes input validation, defensive copies or cleanup code, never touches build files, CI or tests, and never commits.
+
 ## Requirements
 
 - `bash` (3.2+), `awk`, `sed`, `find`; `rg` is used when present, `grep -E` otherwise (tested with stock macOS bash 3.2 and BSD grep)
@@ -99,6 +114,13 @@ The references add current Java: `sealed` types with exhaustive `switch` as the 
 
 Plain requests such as "upgrade this project to Java 21" also trigger the router.
 
+Call the simplifier agent by name, or with `@java-toolkit:java-simplifier`. A plain "simplify this" is usually done by the main session itself:
+
+```text
+Use the java-simplifier agent to simplify my recent changes
+Use the java-simplifier agent to simplify and modernize src/main/java/com/example/orders
+```
+
 ## Development
 
 ```bash
@@ -112,6 +134,12 @@ Behavior evals (`claude plugin eval`, costs API usage; each case also runs a no-
 
 ```bash
 claude plugin eval . --scaffold --allow-tools Bash Write --max-cost-usd 5
+```
+
+The `java-simplifier-*` cases also need `Edit`, and run best without the baseline arm, where the agent does not exist. Their scaffold (`evals/_shared/simplify-workspace.sh`) copies the SDKMAN zulu JDK 11 or 17 and Maven into the workspace and resolves dependencies from your `~/.m2`, because the eval sandbox cannot read your home directory. Git does not run inside the macOS eval sandbox, so these cases name their paths:
+
+```bash
+claude plugin eval . --case 'java-simplifier-*' --ablation none --scaffold --allow-tools Bash Edit Write --max-cost-usd 5
 ```
 
 `compile-snippets.sh` compiles each code block preceded by `<!-- compile: jdk=N [fails-below] [preview] [raw] -->` with an installed JDK (`--release N`); `fails-below` also checks that `--release N-1` rejects it, which proves the minimum JDK claimed in the text. Missing JDKs are skipped, never downloaded.
